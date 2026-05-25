@@ -280,10 +280,9 @@ with register_tab:
             }
 
             st.success(
-                "Customer Account Created Successfully"
-            )
-
-# =========================================
+                "Customer Account Created 
+                
+    # =========================================
 # LOGIN
 # =========================================
 
@@ -300,46 +299,6 @@ with login_tab:
 
     if st.button("Login Account"):
 
-    if login_email in st.session_state.users:
-
-        user = st.session_state.users[
-            login_email
-        ]
-
-        if user["password"] == login_password:
-
-            st.session_state.logged_in = True
-
-            st.session_state.current_user = (
-                user["name"]
-            )
-
-            st.session_state.current_role = (
-                user["role"]
-            )
-
-            st.session_state.saved_email = (
-                login_email
-            )
-
-            st.success(
-                f"Welcome {user['name']}"
-            )
-
-            st.rerun()
-
-        else:
-
-            st.error(
-                "Wrong Password"
-            )
-
-    else:
-
-        st.error(
-            "Account Not Found"
-        )
-
         if login_email in st.session_state.users:
 
             user = st.session_state.users[
@@ -349,18 +308,36 @@ with login_tab:
             if user["password"] == login_password:
 
                 st.session_state.logged_in = True
-                st.session_state.current_user = user["name"]
-                st.session_state.current_role = user["role"]
+
+                st.session_state.current_user = (
+                    user["name"]
+                )
+
+                st.session_state.current_role = (
+                    user["role"]
+                )
+
+                st.session_state.saved_email = (
+                    login_email
+                )
 
                 st.success(
                     f"Welcome {user['name']}"
                 )
 
+                st.rerun()
+
             else:
-                st.error("Wrong Password")
+
+                st.error(
+                    "Wrong Password"
+                )
 
         else:
-            st.error("Account Not Found")
+
+            st.error(
+                "Account Not Found"
+            )
 
 # =========================================
 # ACTIVE ACCOUNT DISPLAY
