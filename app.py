@@ -326,6 +326,135 @@ if st.session_state.logged_in:
         st.rerun()
 
 # =========================================
+# PROFESSIONAL CLIENT PROFILE
+# =========================================
+
+if st.session_state.logged_in:
+
+    st.markdown("---")
+    st.markdown("# CLIENT PROFILE")
+
+    profile_col1, profile_col2 = st.columns([1,2])
+
+    with profile_col1:
+
+        st.image(
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1200&auto=format&fit=crop",
+            use_container_width=True
+        )
+
+    with profile_col2:
+
+        st.markdown(
+            f"## Welcome {st.session_state.current_user}"
+        )
+
+        st.success(
+            "Premium Customer Account Active"
+        )
+
+        total_customer_orders = len([
+            o for o in st.session_state.orders
+            if o['customer'] == st.session_state.current_user
+        ])
+
+        completed_customer_orders = len([
+            o for o in st.session_state.orders
+            if (
+                o['customer'] == st.session_state.current_user
+                and
+                o['completed'] == True
+            )
+        ])
+
+        loyalty_points = total_customer_orders * 10
+
+        st.markdown(
+            f"""
+            ### ACCOUNT DETAILS
+
+            👤 Name: {st.session_state.current_user}
+
+            🧺 Orders Made: {total_customer_orders}
+
+            ✅ Completed Orders: {completed_customer_orders}
+
+            ⭐ Loyalty Points: {loyalty_points}
+
+            🚚 Delivery Status Monitoring Enabled
+
+            💎 Membership: Gold Client
+            """
+        )
+
+        st.progress(
+            min(loyalty_points,100)
+        )
+
+        if loyalty_points >= 100:
+            st.balloons()
+            st.success(
+                "VIP CUSTOMER STATUS ACHIEVED"
+            )
+
+    st.markdown("## QUICK CLIENT FEATURES")
+
+    quick1, quick2, quick3, quick4 = st.columns(4)
+
+    with quick1:
+        st.metric(
+            "Pending Orders",
+            len([
+                o for o in st.session_state.orders
+                if (
+                    o['customer'] == st.session_state.current_user
+                    and
+                    o['completed'] == False
+                )
+            ])
+        )
+
+    with quick2:
+        st.metric(
+            "Completed",
+            completed_customer_orders
+        )
+
+    with quick3:
+        st.metric(
+            "Reward Points",
+            loyalty_points
+        )
+
+    with quick4:
+        st.metric(
+            "Client Rank",
+            "Gold"
+        )
+
+    st.markdown("## RECENT CUSTOMER ACTIVITY")
+
+    customer_orders = [
+        o for o in st.session_state.orders
+        if o['customer'] == st.session_state.current_user
+    ]
+
+    if customer_orders:
+
+        activity_df = pd.DataFrame(customer_orders)
+
+        st.dataframe(
+            activity_df,
+            use_container_width=True
+        )
+
+    else:
+
+        st.info(
+            "No Orders Yet"
+        )
+
+# =========================================
 # ORDER CREATION
 # =========================================
 
@@ -507,6 +636,158 @@ for msg in st.session_state.messages:
     st.info(
         f"{msg['name']}: {msg['message']}"
     )
+
+# =========================================
+# PROFESSIONAL ADMIN PROFILE
+# =========================================
+
+if (
+    st.session_state.logged_in
+    and
+    st.session_state.current_role == "admin"
+):
+
+    st.markdown("---")
+    st.markdown("# ADMIN PROFILE")
+
+    admin_col1, admin_col2 = st.columns([1,2])
+
+    with admin_col1:
+
+        st.image(
+            "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1200&auto=format&fit=crop",
+            use_container_width=True
+        )
+
+    with admin_col2:
+
+        st.markdown("## BIGZ CLEANERS ADMIN")
+
+        st.success(
+            "System Control Center Active"
+        )
+
+        total_customers = len([
+            u for u in st.session_state.users.values()
+            if u['role'] == 'customer'
+        ])
+
+        total_orders_admin = len(
+            st.session_state.orders
+        )
+
+        total_messages = len(
+            st.session_state.messages
+        )
+
+        st.markdown(
+            f"""
+            ### ADMIN DETAILS
+
+            👨‍💼 Position: System Administrator
+
+            👥 Total Customers: {total_customers}
+
+            🧺 Total Orders: {total_orders_admin}
+
+            💬 Customer Chats: {total_messages}
+
+            🚚 Delivery Monitoring Enabled
+
+            📊 Analytics Dashboard Active
+            """
+        )
+
+    st.markdown("## ADMIN QUICK METRICS")
+
+    metric1, metric2, metric3, metric4 = st.columns(4)
+
+    with metric1:
+        st.metric(
+            "Customers",
+            total_customers
+        )
+
+    with metric2:
+        st.metric(
+            "Orders",
+            total_orders_admin
+        )
+
+    with metric3:
+        st.metric(
+            "Chats",
+            total_messages
+        )
+
+    with metric4:
+        st.metric(
+            "Revenue",
+            f"KSH {total_orders_admin * 500}"
+        )
+
+    # =========================================
+    # ANALYTICS CHARTS
+    # =========================================
+
+    st.markdown("## BUSINESS ANALYTICS")
+
+    completed_orders_chart = len([
+        o for o in st.session_state.orders
+        if o['completed'] == True
+    ])
+
+    pending_orders_chart = len([
+        o for o in st.session_state.orders
+        if o['completed'] == False
+    ])
+
+    analytics_data = pd.DataFrame({
+        "Category": [
+            "Completed",
+            "Pending",
+            "Customers",
+            "Chats"
+        ],
+        "Count": [
+            completed_orders_chart,
+            pending_orders_chart,
+            total_customers,
+            total_messages
+        ]
+    })
+
+    st.bar_chart(
+        analytics_data.set_index(
+            "Category"
+        )
+    )
+
+    st.markdown(
+        "## CUSTOMER CHAT ANALYTICS"
+    )
+
+    chat_data = pd.DataFrame({
+        "Chat Activity": [
+            total_messages
+        ]
+    })
+
+    st.line_chart(chat_data)
+
+    st.markdown(
+        "## CUSTOMER GROWTH OVERVIEW"
+    )
+
+    growth_data = pd.DataFrame({
+        "Customers": [
+            max(total_customers-5,0),
+            max(total_customers-3,0),
+            total_customers
+        ]
+    })
+
+    st.area_chart(growth_data)
 
 # =========================================
 # ADMIN DASHBOARD
