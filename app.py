@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 
-# ======================================
+# =========================================
 # PAGE CONFIG
-# ======================================
+# =========================================
 
 st.set_page_config(
     page_title="BIGZ CLEANERS",
@@ -12,9 +12,38 @@ st.set_page_config(
     layout="wide"
 )
 
-# ======================================
+# =========================================
+# SESSION STATES
+# =========================================
+
+if "users" not in st.session_state:
+    st.session_state.users = {
+        "admin@bigz.com": {
+            "name": "BIGZ ADMIN",
+            "phone": "0700000000",
+            "password": "admin123",
+            "role": "admin"
+        }
+    }
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if "current_user" not in st.session_state:
+    st.session_state.current_user = ""
+
+if "current_role" not in st.session_state:
+    st.session_state.current_role = ""
+
+if "orders" not in st.session_state:
+    st.session_state.orders = []
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# =========================================
 # CUSTOM CSS
-# ======================================
+# =========================================
 
 st.markdown(
     """
@@ -23,17 +52,18 @@ st.markdown(
     .stApp {
         background: linear-gradient(
             135deg,
+            #020617,
             #0f172a,
-            #1e3a8a,
-            #2563eb,
+            #1d4ed8,
             #38bdf8
         );
+        background-attachment: fixed;
         color: white;
     }
 
     .main-title {
         text-align:center;
-        font-size:60px;
+        font-size:65px;
         font-weight:bold;
         color:white;
         margin-top:10px;
@@ -41,32 +71,32 @@ st.markdown(
 
     .sub-title {
         text-align:center;
-        font-size:22px;
+        font-size:24px;
         color:#dbeafe;
-        margin-bottom:40px;
+        margin-bottom:30px;
     }
 
     .service-card {
         background:white;
-        padding:20px;
+        padding:18px;
         border-radius:20px;
-        box-shadow:0px 4px 15px rgba(0,0,0,0.2);
-        margin-bottom:30px;
+        margin-bottom:25px;
+        box-shadow:0px 4px 15px rgba(0,0,0,0.25);
         color:black;
     }
 
-    .tracking-box {
-        background:#ffffff;
+    .track-box {
+        background:white;
         color:black;
         padding:25px;
-        border-radius:15px;
+        border-radius:18px;
         margin-top:20px;
     }
 
     .footer {
         text-align:center;
-        padding:30px;
         color:white;
+        padding:30px;
         font-size:18px;
     }
 
@@ -75,9 +105,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ======================================
+# =========================================
 # HEADER
-# ======================================
+# =========================================
 
 st.markdown(
     """
@@ -93,27 +123,24 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ======================================
+# =========================================
 # HERO IMAGE
-# ======================================
+# =========================================
 
 st.image(
     "https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=1600&auto=format&fit=crop",
     use_container_width=True
 )
 
-st.write("")
-st.write("")
-
-# ======================================
-# SERVICES
-# ======================================
+# =========================================
+# SERVICES DATA
+# =========================================
 
 services = [
     {
         "name": "Clothes Washing",
         "price": "KSH 200 Per 7KG",
-        "description": "Professional washing, drying and folding.",
+        "description": "Professional washing and drying.",
         "image": "https://images.unsplash.com/photo-1521656693074-0ef32e80a5d5?q=80&w=1200&auto=format&fit=crop"
     },
     {
@@ -125,19 +152,19 @@ services = [
     {
         "name": "Sofa Cleaning",
         "price": "KSH 1200 Per Set",
-        "description": "Deep stain and dirt removal.",
+        "description": "Deep sofa stain removal.",
         "image": "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop"
     },
     {
         "name": "Curtain Cleaning",
         "price": "KSH 500 Per Pair",
-        "description": "Professional curtain washing and drying.",
+        "description": "Professional curtain cleaning.",
         "image": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
     },
     {
         "name": "Duvet Cleaning",
         "price": "KSH 700 Each",
-        "description": "Heavy duvet deep cleaning service.",
+        "description": "Heavy duvet deep cleaning.",
         "image": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
     },
     {
@@ -148,9 +175,11 @@ services = [
     }
 ]
 
-st.markdown(
-    "## OUR PROFESSIONAL SERVICES"
-)
+# =========================================
+# SERVICES DISPLAY
+# =========================================
+
+st.markdown("# OUR SERVICES")
 
 col1, col2, col3 = st.columns(3)
 
@@ -174,103 +203,229 @@ for index, service in enumerate(services):
             f"### {service['name']}"
         )
 
-        st.write(
-            service["description"]
-        )
+        st.write(service["description"])
 
-        st.success(
-            service["price"]
-        )
+        st.success(service["price"])
 
         st.markdown(
             '</div>',
             unsafe_allow_html=True
         )
 
-# ======================================
-# ORDER SECTION
-# ======================================
+# =========================================
+# ACCOUNT SYSTEM
+# =========================================
 
 st.markdown("---")
+st.markdown("# CUSTOMER ACCOUNT SYSTEM")
 
-st.markdown("# PLACE AN ORDER")
+register_tab, login_tab = st.tabs([
+    "Create Account",
+    "Login"
+])
 
-with st.form("order_form"):
+# =========================================
+# REGISTER
+# =========================================
 
-    customer_name = st.text_input(
-        "Customer Name"
+with register_tab:
+
+    new_name = st.text_input(
+        "Full Name"
     )
 
-    customer_phone = st.text_input(
+    new_phone = st.text_input(
         "Phone Number"
     )
 
-    service_selected = st.selectbox(
-        "Select Service",
-        [s["name"] for s in services]
+    new_email = st.text_input(
+        "Email Address"
     )
 
-    quantity = st.number_input(
-        "Quantity",
-        min_value=1,
-        value=1
+    new_password = st.text_input(
+        "Create Password",
+        type="password"
     )
 
-    pickup_location = st.text_input(
-        "Pickup Location"
+    if st.button("Create Account"):
+
+        if new_email in st.session_state.users:
+
+            st.error(
+                "Account Already Exists"
+            )
+
+        else:
+
+            st.session_state.users[new_email] = {
+                "name": new_name,
+                "phone": new_phone,
+                "password": new_password,
+                "role": "customer"
+            }
+
+            st.success(
+                "Customer Account Created Successfully"
+            )
+
+# =========================================
+# LOGIN
+# =========================================
+
+with login_tab:
+
+    login_email = st.text_input(
+        "Email"
     )
 
-    uploaded_image = st.file_uploader(
-        "Upload Laundry Image"
+    login_password = st.text_input(
+        "Password",
+        type="password"
     )
 
-    submit_order = st.form_submit_button(
-        "Create Order"
+    if st.button("Login Account"):
+
+        if login_email in st.session_state.users:
+
+            user = st.session_state.users[
+                login_email
+            ]
+
+            if user["password"] == login_password:
+
+                st.session_state.logged_in = True
+                st.session_state.current_user = user["name"]
+                st.session_state.current_role = user["role"]
+
+                st.success(
+                    f"Welcome {user['name']}"
+                )
+
+            else:
+                st.error("Wrong Password")
+
+        else:
+            st.error("Account Not Found")
+
+# =========================================
+# ACTIVE ACCOUNT DISPLAY
+# =========================================
+
+if st.session_state.logged_in:
+
+    st.info(
+        f"Logged in as: {st.session_state.current_user}"
     )
 
-if submit_order:
+    if st.button("Logout"):
 
-    tracking_code = (
-        "BIGZ-" +
-        str(datetime.now().strftime("%H%M%S"))
-    )
+        st.session_state.logged_in = False
+        st.session_state.current_user = ""
+        st.session_state.current_role = ""
 
-    estimated_time = (
-        datetime.now() +
-        timedelta(hours=24)
-    )
+        st.rerun()
 
-    st.success("ORDER CREATED SUCCESSFULLY")
-
-    st.markdown(
-        f"""
-        <div class="tracking-box">
-
-        <h2>Order Tracking Details</h2>
-
-        <h3>Tracking Code:</h3>
-        <p>{tracking_code}</p>
-
-        <h3>Status:</h3>
-        <p>Pending Pickup</p>
-
-        <h3>Estimated Completion:</h3>
-        <p>{estimated_time}</p>
-
-        <h3>Pickup Location:</h3>
-        <p>{pickup_location}</p>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-# ======================================
-# ORDER TRACKING
-# ======================================
+# =========================================
+# ORDER CREATION
+# =========================================
 
 st.markdown("---")
 
+if st.session_state.logged_in:
+
+    st.markdown("# PLACE ORDER")
+
+    with st.form("order_form"):
+
+        customer_phone = st.text_input(
+            "Phone Number"
+        )
+
+        selected_service = st.selectbox(
+            "Select Service",
+            [s["name"] for s in services]
+        )
+
+        quantity = st.number_input(
+            "Quantity",
+            min_value=1,
+            value=1
+        )
+
+        pickup_location = st.text_input(
+            "Pickup Location"
+        )
+
+        laundry_image = st.file_uploader(
+            "Upload Laundry Image"
+        )
+
+        create_order = st.form_submit_button(
+            "Create Order"
+        )
+
+    if create_order:
+
+        tracking_code = (
+            "BIGZ-" +
+            datetime.now().strftime("%H%M%S")
+        )
+
+        estimated_delivery = (
+            datetime.now() +
+            timedelta(hours=24)
+        )
+
+        order = {
+            "customer": st.session_state.current_user,
+            "phone": customer_phone,
+            "service": selected_service,
+            "quantity": quantity,
+            "location": pickup_location,
+            "tracking": tracking_code,
+            "status": "Pending Pickup",
+            "completed": False,
+            "created": str(datetime.now())
+        }
+
+        st.session_state.orders.append(order)
+
+        st.success(
+            "ORDER CREATED SUCCESSFULLY"
+        )
+
+        st.markdown(
+            f"""
+            <div class="track-box">
+
+            <h2>Order Tracking</h2>
+
+            <p><b>Tracking Code:</b> {tracking_code}</p>
+
+            <p><b>Status:</b> Pending Pickup</p>
+
+            <p><b>Estimated Delivery:</b>
+            {estimated_delivery}</p>
+
+            <p><b>Pickup Location:</b>
+            {pickup_location}</p>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+else:
+
+    st.warning(
+        "Please Login First To Place Orders"
+    )
+
+# =========================================
+# ORDER TRACKING
+# =========================================
+
+st.markdown("---")
 st.markdown("# TRACK YOUR ORDER")
 
 tracking_input = st.text_input(
@@ -279,35 +434,48 @@ tracking_input = st.text_input(
 
 if tracking_input:
 
-    st.markdown(
-        f"""
-        <div class="tracking-box">
+    found = False
 
-        <h2>Tracking Results</h2>
+    for order in st.session_state.orders:
 
-        <p><b>Tracking Code:</b> {tracking_input}</p>
+        if order["tracking"] == tracking_input:
 
-        <p><b>Status:</b> Washing In Progress</p>
+            found = True
 
-        <p><b>Pickup Time:</b> {datetime.now()}</p>
+            st.markdown(
+                f"""
+                <div class="track-box">
 
-        <p><b>Estimated Delivery:</b>
-        {datetime.now() + timedelta(hours=5)}</p>
+                <h2>Tracking Results</h2>
 
-        <p><b>Processing Stage:</b>
-        Washing & Drying</p>
+                <p><b>Customer:</b>
+                {order['customer']}</p>
 
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+                <p><b>Status:</b>
+                {order['status']}</p>
 
-# ======================================
-# LIVE CHAT SECTION
-# ======================================
+                <p><b>Service:</b>
+                {order['service']}</p>
+
+                <p><b>Pickup Location:</b>
+                {order['location']}</p>
+
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    if not found:
+
+        st.error(
+            "Tracking Code Not Found"
+        )
+
+# =========================================
+# CUSTOMER CHAT
+# =========================================
 
 st.markdown("---")
-
 st.markdown("# CUSTOMER SUPPORT CHAT")
 
 chat_name = st.text_input(
@@ -322,40 +490,146 @@ if st.button("Send Message"):
 
     if chat_name and chat_message:
 
-        st.success(
-            f"Message Sent Successfully by {chat_name}"
+        st.session_state.messages.append({
+            "name": chat_name,
+            "message": chat_message,
+            "time": str(datetime.now())
+        })
+
+        st.success("Message Sent")
+
+# =========================================
+# DISPLAY CHAT MESSAGES
+# =========================================
+
+for msg in st.session_state.messages:
+
+    st.info(
+        f"{msg['name']}: {msg['message']}"
+    )
+
+# =========================================
+# ADMIN DASHBOARD
+# =========================================
+
+if (
+    st.session_state.logged_in
+    and
+    st.session_state.current_role == "admin"
+):
+
+    st.markdown("---")
+    st.markdown("# ADMIN DASHBOARD")
+
+    total_orders = len(
+        st.session_state.orders
+    )
+
+    completed_orders = len([
+        o for o in st.session_state.orders
+        if o["completed"] == True
+    ])
+
+    pending_orders = total_orders - completed_orders
+
+    revenue = total_orders * 500
+
+    if total_orders > 0:
+
+        completion_percentage = (
+            completed_orders /
+            total_orders
+        ) * 100
+
+    else:
+
+        completion_percentage = 0
+
+    pending_percentage = 100 - completion_percentage
+
+    dashboard_data = {
+        "Total Orders": [total_orders],
+        "Completed": [completed_orders],
+        "Pending": [pending_orders],
+        "Revenue": [f"KSH {revenue}"]
+    }
+
+    dashboard_df = pd.DataFrame(
+        dashboard_data
+    )
+
+    st.dataframe(
+        dashboard_df,
+        use_container_width=True
+    )
+
+    st.markdown(
+        "## DELIVERY PERFORMANCE"
+    )
+
+    st.progress(
+        int(completion_percentage)
+    )
+
+    st.success(
+        f"Completed Deliveries: {completion_percentage:.1f}%"
+    )
+
+    st.warning(
+        f"Pending Deliveries: {pending_percentage:.1f}%"
+    )
+
+    st.markdown("## UPDATE ORDER STATUS")
+
+    for index, order in enumerate(
+        st.session_state.orders
+    ):
+
+        st.markdown(
+            f"### {order['tracking']}"
         )
 
-        st.info(chat_message)
+        st.write(
+            f"Customer: {order['customer']}"
+        )
 
-# ======================================
-# ADMIN DASHBOARD
-# ======================================
+        st.write(
+            f"Current Status: {order['status']}"
+        )
+
+        new_status = st.selectbox(
+            f"Update Status {index}",
+            [
+                "Pending Pickup",
+                "Picked Up",
+                "Washing",
+                "Drying",
+                "Ironing",
+                "Packaging",
+                "Out For Delivery",
+                "Delivered"
+            ],
+            key=index
+        )
+
+        if st.button(
+            f"Save Status {index}"
+        ):
+
+            order["status"] = new_status
+
+            if new_status == "Delivered":
+                order["completed"] = True
+
+            st.success(
+                "Order Updated Successfully"
+            )
+
+# =========================================
+# LAUNDRY PROCESS TRACKER
+# =========================================
 
 st.markdown("---")
-
-st.markdown("# ADMIN DASHBOARD")
-
-admin_data = {
-    "Orders Today": [25],
-    "Completed": [18],
-    "Pending": [7],
-    "Revenue": [35000]
-}
-
-admin_df = pd.DataFrame(admin_data)
-
-st.dataframe(
-    admin_df,
-    use_container_width=True
-)
-
-# ======================================
-# PROCESSING TIME TRACKER
-# ======================================
-
-st.markdown("---")
-
 st.markdown("# LAUNDRY PROCESS TRACKER")
 
 process_steps = [
@@ -371,9 +645,9 @@ process_steps = [
 for step in process_steps:
     st.checkbox(step)
 
-# ======================================
+# =========================================
 # FOOTER
-# ======================================
+# =========================================
 
 st.markdown(
     """
@@ -381,7 +655,7 @@ st.markdown(
 
     🧺 BIGZ CLEANERS <br>
 
-    Trusted Professional Laundry Partner <br><br>
+    Trusted Laundry Partner <br><br>
 
     © 2026 BIGZ CLEANERS <br>
     Nairobi, Kenya
@@ -389,4 +663,4 @@ st.markdown(
     </div>
     """,
     unsafe_allow_html=True
-)
+        )
