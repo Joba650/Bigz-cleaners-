@@ -228,8 +228,17 @@ else:
         use_container_width=True
     )
 # =========================================
+# ACCOUNT SYSTEM("---")
+st.markdown("# CUSTOMER ACCOUNT SYSTEM")
+
+register_tab, login_tab = st.tabs([
+    "Create Account",
+    "Login"
+])
+
+# ==========================================
 # ACCOUNT SYSTEM
-# =========================================
+# ==========================================
 
 st.markdown("---")
 st.markdown("# CUSTOMER ACCOUNT SYSTEM")
@@ -239,9 +248,9 @@ register_tab, login_tab = st.tabs([
     "Login"
 ])
 
-# =========================================
+# ==========================================
 # REGISTER
-# =========================================
+# ==========================================
 
 with register_tab:
 
@@ -263,28 +272,25 @@ with register_tab:
     )
 
     if st.button("Create Account"):
-
         if new_email in st.session_state.users:
-
             st.error(
                 "Account Already Exists"
             )
-
         else:
-
             st.session_state.users[new_email] = {
                 "name": new_name,
                 "phone": new_phone,
                 "password": new_password,
                 "role": "customer"
             }
-
+            
             st.success(
-                "Customer Account Created 
-                
-    # =========================================
+                "Customer Account Created"
+            )
+
+# ==========================================
 # LOGIN
-# =========================================
+# ==========================================
 
 with login_tab:
 
@@ -298,43 +304,27 @@ with login_tab:
     )
 
     if st.button("Login Account"):
-
         if login_email in st.session_state.users:
-
+            
             user = st.session_state.users[
                 login_email
             ]
-
+            
             if user["password"] == login_password:
-
                 st.session_state.logged_in = True
-
-                st.session_state.current_user = (
-                    user["name"]
-                )
-
-                st.session_state.current_role = (
-                    user["role"]
-                )
-
-                st.session_state.saved_email = (
-                    login_email
-                )
-
+                st.session_state.current_user = user["name"]
+                st.session_state.current_role = user["role"]
+                st.session_state.saved_email = login_email
+                
                 st.success(
                     f"Welcome {user['name']}"
                 )
-
                 st.rerun()
-
             else:
-
                 st.error(
                     "Wrong Password"
                 )
-
         else:
-
             st.error(
                 "Account Not Found"
             )
