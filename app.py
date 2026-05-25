@@ -174,44 +174,59 @@ services = [
         "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop"
     }
 ]
-
 # =========================================
-# SERVICES DISPLAY
+# PROTECTED SERVICES DISPLAY
 # =========================================
 
-st.markdown("# OUR SERVICES")
+if st.session_state.logged_in:
 
-col1, col2, col3 = st.columns(3)
+    st.markdown("# OUR SERVICES")
 
-for index, service in enumerate(services):
+    col1, col2, col3 = st.columns(3)
 
-    column = [col1, col2, col3][index % 3]
+    for index, service in enumerate(services):
 
-    with column:
+        column = [col1, col2, col3][index % 3]
 
-        st.markdown(
-            '<div class="service-card">',
-            unsafe_allow_html=True
-        )
+        with column:
 
-        st.image(
-            service["image"],
-            use_container_width=True
-        )
+            st.markdown(
+                '<div class="service-card">',
+                unsafe_allow_html=True
+            )
 
-        st.markdown(
-            f"### {service['name']}"
-        )
+            st.image(
+                service["image"],
+                use_container_width=True
+            )
 
-        st.write(service["description"])
+            st.markdown(
+                f"### {service['name']}"
+            )
 
-        st.success(service["price"])
+            st.write(
+                service["description"]
+            )
 
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
+            st.success(
+                service["price"]
+            )
 
+            st.markdown(
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+else:
+
+    st.warning(
+        "Create Account And Login To Access BIGZ CLEANERS Services"
+    )
+
+    st.image(
+        "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?q=80&w=1600&auto=format&fit=crop",
+        use_container_width=True
+    )
 # =========================================
 # ACCOUNT SYSTEM
 # =========================================
@@ -284,6 +299,46 @@ with login_tab:
     )
 
     if st.button("Login Account"):
+
+    if login_email in st.session_state.users:
+
+        user = st.session_state.users[
+            login_email
+        ]
+
+        if user["password"] == login_password:
+
+            st.session_state.logged_in = True
+
+            st.session_state.current_user = (
+                user["name"]
+            )
+
+            st.session_state.current_role = (
+                user["role"]
+            )
+
+            st.session_state.saved_email = (
+                login_email
+            )
+
+            st.success(
+                f"Welcome {user['name']}"
+            )
+
+            st.rerun()
+
+        else:
+
+            st.error(
+                "Wrong Password"
+            )
+
+    else:
+
+        st.error(
+            "Account Not Found"
+        )
 
         if login_email in st.session_state.users:
 
@@ -507,6 +562,8 @@ if st.session_state.logged_in:
 
         order = {
             "customer": st.session_state.current_user,
+            if "saved_email" not in st.session_state:
+    st.session_state.saved_email = ""
             "phone": customer_phone,
             "service": selected_service,
             "quantity": quantity,
