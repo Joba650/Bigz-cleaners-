@@ -11,48 +11,50 @@ DATABASE_FILE_PATH = "users_db.json"
 APP_THEME_COLOR_PRIMARY = "#2563eb"
 APP_THEME_COLOR_SECONDARY = "#3b82f6"
 
-LAUNDRY_SERVICE_CATALOG = [
-    {
-        "id": "srv_wash_fold",
-        "name": "Wash & Fold (General Wear)", 
-        "price": 100, 
-        "unit": "KG", 
-        "type": "Wash & Fold",
-        "image_url": "https://images.unsplash.com/photo-1545173168-9f1907e80033?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "srv_wash_iron",
-        "name": "Wash, Dry, Iron & Fold", 
-        "price": 140, 
-        "unit": "KG", 
-        "type": "Wash & Fold",
-        "image_url": "https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "srv_duvet",
-        "name": "Heavy Blanket / Duvet", 
-        "price": 400, 
-        "unit": "Piece", 
-        "type": "Dry Clean",
-        "image_url": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "srv_suits",
-        "name": "Official Suits (Jacket & Trousers)", 
-        "price": 500, 
-        "unit": "Suit", 
-        "type": "Dry Clean",
-        "image_url": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "srv_shoes",
-        "name": "Sneaker / Canvas Shoe Cleaning", 
-        "price": 200, 
-        "unit": "Pair", 
-        "type": "Wash & Fold",
-        "image_url": "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=500&auto=format&fit=crop&q=60"
-    }
-]
+# Initialize pricing catalog in state memory to allow manual administrative adjustments
+if "laundry_service_catalog" not in st.session_state:
+    st.session_state.laundry_service_catalog = [
+        {
+            "id": "srv_wash_fold",
+            "name": "Wash & Fold (General Wear)", 
+            "price": 100.0, 
+            "unit": "KG", 
+            "type": "Wash & Fold",
+            "image_url": "https://images.unsplash.com/photo-1545173168-9f1907e80033?w=500&auto=format&fit=crop&q=60"
+        },
+        {
+            "id": "srv_wash_iron",
+            "name": "Wash, Dry, Iron & Fold", 
+            "price": 140.0, 
+            "unit": "KG", 
+            "type": "Wash & Fold",
+            "image_url": "https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?w=500&auto=format&fit=crop&q=60"
+        },
+        {
+            "id": "srv_duvet",
+            "name": "Heavy Blanket / Duvet", 
+            "price": 400.0, 
+            "unit": "Piece", 
+            "type": "Dry Clean",
+            "image_url": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=500&auto=format&fit=crop&q=60"
+        },
+        {
+            "id": "srv_suits",
+            "name": "Official Suits (Jacket & Trousers)", 
+            "price": 500.0, 
+            "unit": "Suit", 
+            "type": "Dry Clean",
+            "image_url": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&auto=format&fit=crop&q=60"
+        },
+        {
+            "id": "srv_shoes",
+            "name": "Sneaker / Canvas Shoe Cleaning", 
+            "price": 200.0, 
+            "unit": "Pair", 
+            "type": "Wash & Fold",
+            "image_url": "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=500&auto=format&fit=crop&q=60"
+        }
+    ]
 
 st.set_page_config(
     page_title="BIGZ CLEANERS",
@@ -116,8 +118,8 @@ state_defaults = {
     "current_user": "",
     "current_email": "",
     "current_role": "",
-    "selected_service_id": LAUNDRY_SERVICE_CATALOG[0]["id"],
-    "admin_filter_metric": "Orders", # Interactive toggle switch track memory
+    "selected_service_id": st.session_state.laundry_service_catalog[0]["id"],
+    "admin_filter_metric": "Orders",
     "messages": [
         {"sender": "admin@bigz.com", "recipient": "sarachen@gmail.com", "sender_name": "Theophilus (Admin)", "message": "Hello Sarah, welcome to your dedicated support desk thread!", "time": "12:00:00"}
     ],
@@ -134,7 +136,7 @@ state_defaults = {
     "orders": [
         {
             "tracking": "BIGZ-12341", "customer": "Sarah Chen", "email": "sarachen@gmail.com",
-            "service": "Wash & Fold (General Wear)", "quantity": "5 KG", "cost": 500,
+            "service": "Wash & Fold (General Wear)", "quantity": "5 KG", "cost": 500.0,
             "pickup_logistics": "05/28/26 at 10:00 AM", "address": "123 Saved Address From Street",
             "payment_gateway": "M-Pesa Express", "status": "Pickup", "assigned_staff": "Alex Chen",
             "created_at": "05/26/26"
@@ -173,6 +175,10 @@ st.markdown(f"""
         background: white; padding: 15px; border-radius: 12px; text-align: center; color: #0f172a;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); border-bottom: 4px solid #2563eb;
     }}
+    .calc-container {{
+        background: rgba(255, 255, 255, 0.07); padding: 20px; border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.1); color: white; margin-bottom: 20px;
+    }}
     .footer {{ text-align: center; color: #94a3b8; padding: 40px 0; margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.1); }}
 </style>
 """, unsafe_allow_html=True)
@@ -206,7 +212,7 @@ if st.session_state.logged_in:
     if active_role == "customer":
         menu_selection = st.sidebar.radio("Navigation Control Menu", ["Service Dashboard", "💬 Messages Support Desk", "My Profile Account"])
     else:
-        menu_selection = st.sidebar.radio("Navigation Control Menu", ["Main Operations Ledger", "User Accounts Profiles", "Inventory & Billings"])
+        menu_selection = st.sidebar.radio("Navigation Control Menu", ["Main Operations Ledger", "Dynamic Price Updates", "User Accounts Profiles", "Inventory & Billings"])
 
     st.sidebar.markdown("<br><br>", unsafe_allow_html=True)
     if st.sidebar.button("🚪 Log Out of Session", use_container_width=True):
@@ -286,7 +292,6 @@ if not st.session_state.logged_in:
                 st.markdown("<p style='color: #cbd5e1; font-weight: bold; margin-bottom: 5px;'>WELCOME BACK</p>", unsafe_allow_html=True)
                 st.caption("Pro-Tip: You can copy and paste your saved parameters directly into the boxes below.")
                 
-                # REQUIREMENT 1: Unbound input boxes outside strict st.form container to allow seamless native copy-paste actions across all devices
                 input_email = st.text_input("Email Account Address", key="login_email_raw", placeholder="name@domain.com")
                 input_password = st.text_input("Secure Account Password", type="password", key="login_pass_raw", placeholder="••••••••")
                 
@@ -353,7 +358,6 @@ if not st.session_state.logged_in:
 # ==============================================================================
 elif st.session_state.logged_in and active_role == "customer":
     
-    # Global Real-time notification banners
     if st.session_state.notifications:
         with st.container():
             latest_notif = st.session_state.notifications[-1]
@@ -368,8 +372,8 @@ elif st.session_state.logged_in and active_role == "customer":
         st.markdown("## 🧺 Interactive Service Menu")
         st.markdown("*Tap directly on any package card's selection button to load it instantly into your pipeline below.*")
         
-        card_columns = st.columns(len(LAUNDRY_SERVICE_CATALOG))
-        for index, item in enumerate(LAUNDRY_SERVICE_CATALOG):
+        card_columns = st.columns(len(st.session_state.laundry_service_catalog))
+        for index, item in enumerate(st.session_state.laundry_service_catalog):
             with card_columns[index]:
                 is_selected = st.session_state.selected_service_id == item["id"]
                 style_class = "service-card-selected" if is_selected else "service-card"
@@ -391,12 +395,12 @@ elif st.session_state.logged_in and active_role == "customer":
                     st.rerun()
                 
         st.markdown("---")
-        selected_service_profile = next(s for s in LAUNDRY_SERVICE_CATALOG if s["id"] == st.session_state.selected_service_id)
+        selected_service_profile = next(s for s in st.session_state.laundry_service_catalog if s["id"] == st.session_state.selected_service_id)
         st.markdown(f"## ➕ Order Placement Pipeline (`Selected: {selected_service_profile['name']}`)")
         
         with st.expander("Configure Flowchart Multi-Step Order Intake Engine", expanded=True):
             order_quantity = st.number_input(f"Specify Quantity ({selected_service_profile['unit']})", min_value=1, value=1)
-            calculated_total_cost = selected_service_profile["price"] * order_quantity
+            calculated_total_cost = float(selected_service_profile["price"]) * order_quantity
             
             logistics_col_1, logistics_col_2 = st.columns(2)
             delivery_date = logistics_col_1.date_input("Schedule Pickup Date Anchor")
@@ -445,7 +449,6 @@ elif st.session_state.logged_in and active_role == "customer":
                     </div>
                     """, unsafe_allow_html=True)
 
-    # REQUIREMENT 3: End-to-End messaging support layout (Client Portal View)
     elif menu_selection == "💬 Messages Support Desk":
         st.markdown("## 💬 Direct Helpdesk Communications Queue")
         st.markdown("Text our management staff directly. Your unique messaging channel is isolated end-to-end securely.")
@@ -468,7 +471,6 @@ elif st.session_state.logged_in and active_role == "customer":
                     
         with chat_history_column:
             st.markdown("#### Live Communication Thread")
-            # Filter messages where the customer is either sender or recipient
             customer_thread = [m for m in st.session_state.messages if m["sender"] == active_email or m["recipient"] == active_email]
             
             for active_message in reversed(customer_thread):
@@ -503,7 +505,6 @@ elif st.session_state.logged_in and active_role == "admin":
         st.markdown("## ⚙️ Administration Engine Process Control Dashboard")
         st.markdown("*Tap any metric card icon below to change the primary tracking database focus area instantly.*")
         
-        # REQUIREMENT 2: Admin analytics metric boxes converted into actual tap-responsive input buttons
         analytics_col_1, analytics_col_2, analytics_col_3 = st.columns(3)
         
         with analytics_col_1:
@@ -527,123 +528,187 @@ elif st.session_state.logged_in and active_role == "admin":
                 st.session_state.admin_filter_metric = "Messages"
                 st.rerun()
 
-        st.markdown(f"### 📍 Current Dashboard View: `{st.session_state.admin_filter_metric.upper()}`")
-        st.markdown("---")
+        # TWO COLUMN ADMINISTRATIVE WORKSPACE (Ledger View + Cool Calculator Widget)
+        workspace_ledger_col, workspace_calc_col = st.columns([2.1, 0.9], gap="large")
 
-        # VIEW BLOCK 1: Orders Matrix Tracker
-        if st.session_state.admin_filter_metric == "Orders":
-            if not st.session_state.orders:
-                st.info("System process logs contain zero running context objects currently.")
-            else:
-                matrix_ledger = [
-                    {
-                        "Index Pointer": index,
-                        "Order ID Vector": entry["tracking"],
-                        "Client Context": entry["customer"],
-                        "Processing Lifecycle Stage": entry["status"],
-                        "Deployed Fleet Asset": entry["assigned_staff"],
-                        "System Timestamp": entry["created_at"]
-                    } for index, entry in enumerate(st.session_state.orders)
-                ]
-                orders_dataframe = pd.DataFrame(matrix_ledger)
-                st.dataframe(orders_dataframe.drop(columns=["Index Pointer"]), use_container_width=True, hide_index=True)
+        with workspace_ledger_col:
+            st.markdown(f"### 📍 Current Dashboard View: `{st.session_state.admin_filter_metric.upper()}`")
+            
+            if st.session_state.admin_filter_metric == "Orders":
+                if not st.session_state.orders:
+                    st.info("System process logs contain zero running context objects currently.")
+                else:
+                    matrix_ledger = [
+                        {
+                            "Index Pointer": index,
+                            "Order ID Vector": entry["tracking"],
+                            "Client Context": entry["customer"],
+                            "Processing Lifecycle Stage": entry["status"],
+                            "Deployed Fleet Asset": entry["assigned_staff"],
+                            "System Timestamp": entry["created_at"]
+                        } for index, entry in enumerate(st.session_state.orders)
+                    ]
+                    orders_dataframe = pd.DataFrame(matrix_ledger)
+                    st.dataframe(orders_dataframe.drop(columns=["Index Pointer"]), use_container_width=True, hide_index=True)
+                    
+                    st.markdown("#### Production Workflow State Manipulation Unit")
+                    control_col_1, control_col_2, control_col_3 = st.columns(3)
+                    with control_col_1:
+                        target_order_index = st.selectbox(
+                            "Select Target Pipeline Execution ID Context", 
+                            options=orders_dataframe["Index Pointer"], 
+                            format_func=lambda x: f"Order #{st.session_state.orders[x]['tracking']} [{st.session_state.orders[x]['customer']}]"
+                        )
+                    with control_col_2:
+                        updated_workflow_stage = st.selectbox(
+                            "Advance Flowchart Execution Phase", 
+                            ["Pickup", "Washing", "Drying", "Fold", "Ready for Delivery", "Delivered & Complete"]
+                        )
+                    with control_col_3:
+                        allocated_staff_asset = st.selectbox("Re-assign Operational Fleet Worker Unit", st.session_state.staff_directory)
+                        
+                    if st.button("Commit Production Modification Instructions Override", use_container_width=True):
+                        old_status = st.session_state.orders[target_order_index]["status"]
+                        st.session_state.orders[target_order_index]["status"] = updated_workflow_stage
+                        st.session_state.orders[target_order_index]["assigned_staff"] = allocated_staff_asset
+                        
+                        tracking_id = st.session_state.orders[target_order_index]['tracking']
+                        st.session_state.notifications.append({
+                            "text": f"Order {tracking_id} status changed from {old_status} to {updated_workflow_stage}!",
+                            "timestamp": datetime.now().strftime("%H:%M")
+                        })
+                        
+                        st.success("Target workflow state configuration adjustments updated. Notification dispatched to client!")
+                        st.rerun()
+
+            elif st.session_state.admin_filter_metric == "Clients":
+                records_pool = []
+                for database_email, profile_node in st.session_state.users.items():
+                    if profile_node["role"] == "customer":
+                        records_pool.append({
+                            "Client Name Master Identifier": profile_node["name"],
+                            "Mobile Link Address String": profile_node["phone"],
+                            "Identity Clearance Allocation Key": database_email,
+                            "Security Verification Clearance Flags": "VERIFIED ACCESS ACTIVE" if profile_node.get("verified", False) else "LOCKED LOOP PENDING"
+                        })
+                if records_pool:
+                    st.table(pd.DataFrame(records_pool))
+                else:
+                    st.caption("No registered records located inside user data arrays.")
+
+            elif st.session_state.admin_filter_metric == "Messages":
+                st.markdown("#### 💬 End-to-End Client Chat Threads Allocation")
+                all_client_emails = [email for email, data in st.session_state.users.items() if data["role"] == "customer"]
                 
-                st.markdown("#### Production Workflow State Manipulation Unit")
-                control_col_1, control_col_2, control_col_3 = st.columns(3)
-                with control_col_1:
-                    target_order_index = st.selectbox(
-                        "Select Target Pipeline Execution ID Context", 
-                        options=orders_dataframe["Index Pointer"], 
-                        format_func=lambda x: f"Order #{st.session_state.orders[x]['tracking']} [{st.session_state.orders[x]['customer']}]"
+                if not all_client_emails:
+                    st.info("No customers are available to establish chat channels with.")
+                else:
+                    selected_client_chat = st.selectbox(
+                        "Select a secure client thread to open end-to-end communication channels:", 
+                        options=all_client_emails,
+                        format_func=lambda x: f"💬 Channel thread with: {st.session_state.users[x]['name']} ({x})"
                     )
-                with control_col_2:
-                    updated_workflow_stage = st.selectbox(
-                        "Advance Flowchart Execution Phase", 
-                        ["Pickup", "Washing", "Drying", "Fold", "Ready for Delivery", "Delivered & Complete"]
-                    )
-                with control_col_3:
-                    allocated_staff_asset = st.selectbox("Re-assign Operational Fleet Worker Unit", st.session_state.staff_directory)
                     
-                if st.button("Commit Production Modification Instructions Override", use_container_width=True):
-                    old_status = st.session_state.orders[target_order_index]["status"]
-                    st.session_state.orders[target_order_index]["status"] = updated_workflow_stage
-                    st.session_state.orders[target_order_index]["assigned_staff"] = allocated_staff_asset
+                    chat_input_column, chat_history_column = st.columns([1.1, 1.9], gap="small")
                     
-                    tracking_id = st.session_state.orders[target_order_index]['tracking']
-                    st.session_state.notifications.append({
-                        "text": f"Order {tracking_id} status changed from {old_status} to {updated_workflow_stage}!",
-                        "timestamp": datetime.now().strftime("%H:%M")
-                    })
-                    
-                    st.success("Target workflow state configuration adjustments updated. Notification dispatched to client!")
-                    st.rerun()
+                    with chat_input_column:
+                        composed_message_text = st.text_area("Write response message payload back to this client:", placeholder="Enter response details here...")
+                        if st.button("Transmit Secure Response Package", use_container_width=True):
+                            if composed_message_text:
+                                st.session_state.messages.append({
+                                    "sender": "admin@bigz.com",
+                                    "recipient": selected_client_chat,
+                                    "sender_name": "Theophilus (Admin)",
+                                    "message": composed_message_text,
+                                    "time": datetime.now().strftime("%H:%M:%S")
+                                })
+                                st.session_state.notifications.append({
+                                    "text": f"New message from support staff: '{composed_message_text[:40]}...'",
+                                    "timestamp": datetime.now().strftime("%H:%M")
+                                })
+                                st.success("Message loaded onto the client's private stream securely.")
+                                st.rerun()
+                                
+                    with chat_history_column:
+                        st.markdown(f"##### Chat Transcript Ledger (`Thread: {st.session_state.users[selected_client_chat]['name']}`)")
+                        isolated_thread = [
+                            m for m in st.session_state.messages 
+                            if (m["sender"] == "admin@bigz.com" and m["recipient"] == selected_client_chat) or 
+                               (m["sender"] == selected_client_chat and m["recipient"] == "admin@bigz.com")
+                        ]
+                        
+                        for active_message in reversed(isolated_thread):
+                            if "Admin" in active_message["sender_name"]:
+                                st.warning(f"⚙️ **{active_message['sender_name']}** [{active_message['time']}]: {active_message['message']}")
+                            else:
+                                st.info(f"👤 **{active_message['sender_name']}** [{active_message['time']}]: {active_message['message']}")
 
-        # VIEW BLOCK 2: Clients Directory view
-        elif st.session_state.admin_filter_metric == "Clients":
-            records_pool = []
-            for database_email, profile_node in st.session_state.users.items():
-                if profile_node["role"] == "customer":
-                    records_pool.append({
-                        "Client Name Master Identifier": profile_node["name"],
-                        "Mobile Link Address String": profile_node["phone"],
-                        "Identity Clearance Allocation Key": database_email,
-                        "Security Verification Clearance Flags": "VERIFIED ACCESS ACTIVE" if profile_node.get("verified", False) else "LOCKED LOOP PENDING"
-                    })
-            if records_pool:
-                st.table(pd.DataFrame(records_pool))
-            else:
-                st.caption("No registered records located inside user data arrays.")
+        # FEATURE 1: Professional Calculator Column Widget
+        with workspace_calc_col:
+            st.markdown("### 🧮 Admin Quick-Calc")
+            st.markdown("""
+            <div class="calc-container">
+                <h4 style="margin:0 0 10px 0; color:#cbd5e1;">⚡ Operational Estimation Engine</h4>
+                <p style="font-size:12px; margin:0; opacity:0.8;">Quickly figure out order values or discount overrides on the fly.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            calc_base_price = st.number_input("Base Service Rate (KES)", min_value=0.0, value=150.0, step=10.0)
+            calc_quantity = st.number_input("Bulk Package Volume Count", min_value=1.0, value=5.0, step=0.5)
+            calc_discount = st.slider("Manager Discount Override (%)", min_value=0, max_value=50, value=10)
+            calc_logistics = st.number_input("Logistics/Delivery Surcharge (KES)", min_value=0.0, value=150.0, step=50.0)
+            
+            sub_total = calc_base_price * calc_quantity
+            discount_amount = sub_total * (calc_discount / 100.0)
+            final_estimation = (sub_total - discount_amount) + calc_logistics
+            
+            st.markdown(f"""
+            <div style="background:#1e293b; padding:15px; border-radius:10px; border-left:4px solid #10b981;">
+                <p style="margin:0; font-size:11px; opacity:0.7; color:white;">ESTIMATED SETTLE INVOICE VALUE:</p>
+                <h2 style="margin:5px 0 0 0; color:#10b981; font-weight:800;">KES {final_estimation:,.2f}</h2>
+            </div>
+            """, unsafe_allow_html=True)
 
-        # VIEW BLOCK 3: End-to-End Messaging Threading Center (Admin View)
-        elif st.session_state.admin_filter_metric == "Messages":
-            st.markdown("#### 💬 End-to-End Client Chat Threads Allocation")
-            
-            # Dynamically pull all clients who have user accounts
-            all_client_emails = [email for email, data in st.session_state.users.items() if data["role"] == "customer"]
-            
-            if not all_client_emails:
-                st.info("No customers are available to establish chat channels with.")
-            else:
-                selected_client_chat = st.selectbox(
-                    "Select a secure client thread to open end-to-end communication channels:", 
-                    options=all_client_emails,
-                    format_func=lambda x: f"💬 Channel thread with: {st.session_state.users[x]['name']} ({x})"
+    # FEATURE 2: Dynamic Live Price Update Suite Configuration View Layout
+    elif menu_selection == "Dynamic Price Updates":
+        st.markdown("## 🏷️ Live Service Catalog Price Adjustment Matrix")
+        st.markdown("Modify catalog prices directly below. Updates apply instantly to the consumer side menu without altering order logs or storage profiles.")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Display each service with individual text input boxes
+        price_update_columns = st.columns(len(st.session_state.laundry_service_catalog))
+        
+        for index, service_item in enumerate(st.session_state.laundry_service_catalog):
+            with price_update_columns[index]:
+                st.markdown(f"""
+                <div style="background:white; padding:12px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); color:#0f172a; margin-bottom:10px;">
+                    <span style="font-size:11px; color:#2563eb; font-weight:bold;">{service_item['type']}</span>
+                    <h5 style="margin:4px 0; font-size:13px; font-weight:700; height:35px; overflow:hidden;">{service_item['name']}</h5>
+                    <p style="margin:0; font-size:11px; color:#64748b;">Current baseline: <b>KES {service_item['price']}</b></p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Dynamic inputs linked directly to values in the catalog state memory arrays
+                new_price_input = st.number_input(
+                    f"New Rate ({service_item['unit']})",
+                    key=f"input_p_{service_item['id']}",
+                    min_value=1.0,
+                    value=float(service_item['price']),
+                    step=5.0
                 )
                 
-                chat_input_column, chat_history_column = st.columns([1, 2], gap="medium")
-                
-                with chat_input_column:
-                    composed_message_text = st.text_area("Write response message payload back to this client:", placeholder="Enter response details here...")
-                    if st.button("Transmit Secure Response Package", use_container_width=True):
-                        if composed_message_text:
-                            st.session_state.messages.append({
-                                "sender": "admin@bigz.com",
-                                "recipient": selected_client_chat,
-                                "sender_name": "Theophilus (Admin)",
-                                "message": composed_message_text,
-                                "time": datetime.now().strftime("%H:%M:%S")
-                            })
-                            st.session_state.notifications.append({
-                                "text": f"New message from support staff: '{composed_message_text[:40]}...'",
-                                "timestamp": datetime.now().strftime("%H:%M")
-                            })
-                            st.success("Message loaded onto the client's private stream securely.")
-                            st.rerun()
-                            
-                with chat_history_column:
-                    st.markdown(f"##### Chat Transcript Ledger (`Thread: {st.session_state.users[selected_client_chat]['name']}`)")
-                    # Filter messages matching exactly between the admin and this single selected customer
-                    isolated_thread = [
-                        m for m in st.session_state.messages 
-                        if (m["sender"] == "admin@bigz.com" and m["recipient"] == selected_client_chat) or 
-                           (m["sender"] == selected_client_chat and m["recipient"] == "admin@bigz.com")
-                    ]
+                # Check if the value was modified and save immediately to session memory
+                if new_price_input != float(service_item['price']):
+                    st.session_state.laundry_service_catalog[index]['price'] = new_price_input
                     
-                    for active_message in reversed(isolated_thread):
-                        if "Admin" in active_message["sender_name"]:
-                            st.warning(f"⚙️ **{active_message['sender_name']}** [{active_message['time']}]: {active_message['message']}")
-                        else:
-                            st.info(f"👤 **{active_message['sender_name']}** [{active_message['time']}]: {active_message['message']}")
+                    # Notify clients about the change
+                    st.session_state.notifications.append({
+                        "text": f"Catalog price update: '{service_item['name']}' has been updated to KES {new_price_input} per {service_item['unit']}.",
+                        "timestamp": datetime.now().strftime("%H:%M")
+                    })
+                    st.success(f"Updated {service_item['id']}!")
+                    st.rerun()
 
     elif menu_selection == "User Accounts Profiles":
         st.markdown("## 👥 Database Master Registers")
