@@ -123,8 +123,8 @@ state_defaults = {
     "messages": [
         {"sender": "admin@bigz.com", "recipient": "sarachen@gmail.com", "sender_name": "Theophilus (Admin)", "message": "Hello Sarah, welcome to your dedicated support desk thread!", "time": "12:00:00"}
     ],
-    "notifications": [
-        {"text": "Welcome back! Check your service dashboard for active timelines.", "timestamp": "Just Now"}
+    "price_alerts": [
+        {"text": "Welcome to BIGZ Cleaners! Standard pricing schedules are currently active.", "timestamp": "System Initialization"}
     ],
     "pending_verification": None,
     "inventory": {
@@ -138,7 +138,7 @@ state_defaults = {
             "tracking": "BIGZ-12341", "customer": "Sarah Chen", "email": "sarachen@gmail.com",
             "service": "Wash & Fold (General Wear)", "quantity": "5 KG", "cost": 500.0,
             "pickup_logistics": "05/28/26 at 10:00 AM", "address": "123 Saved Address From Street",
-            "payment_gateway": "M-Pesa Express", "status": "Pickup", "assigned_staff": "Alex Chen",
+            "payment_gateway": "M-Pesa (Submitted)", "status": "Pickup", "assigned_staff": "Alex Chen",
             "created_at": "05/26/26"
         }
     ]
@@ -178,6 +178,12 @@ st.markdown(f"""
     .calc-container {{
         background: rgba(255, 255, 255, 0.07); padding: 20px; border-radius: 14px;
         border: 1px solid rgba(255,255,255,0.1); color: white; margin-bottom: 20px;
+    }}
+    .alert-bar {{
+        background: linear-gradient(90deg, #b45309, #d97706); color: white; 
+        padding: 12px 20px; border-radius: 10px; margin-bottom: 25px; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 14px;
+        border-left: 5px solid #f59e0b;
     }}
     .footer {{ text-align: center; color: #94a3b8; padding: 40px 0; margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.1); }}
 </style>
@@ -358,15 +364,15 @@ if not st.session_state.logged_in:
 # ==============================================================================
 elif st.session_state.logged_in and active_role == "customer":
     
-    if st.session_state.notifications:
-        with st.container():
-            latest_notif = st.session_state.notifications[-1]
-            st.markdown(f"""
-            <div style="background: linear-gradient(90deg, #1e3a8a, #2563eb); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div><strong>🔔 Notification Update:</strong> {latest_notif['text']}</div>
-                <div style="font-size: 11px; opacity: 0.8; font-weight: bold;">{latest_notif['timestamp']}</div>
-            </div>
-            """, unsafe_allow_html=True)
+    # REQUIREMENT 1: Real-time Price Update Notification Alert Bar Matrix Layout
+    if st.session_state.price_alerts:
+        latest_alert = st.session_state.price_alerts[-1]
+        st.markdown(f"""
+        <div class="alert-bar">
+            <strong>🔔 Price Matrix Alert Bar:</strong> {latest_alert['text']} 
+            <span style="float: right; font-size: 11px; opacity: 0.8; font-weight: bold; margin-left: 10px;">[{latest_alert['timestamp']}]</span>
+        </div>
+        """, unsafe_allow_html=True)
 
     if menu_selection == "Service Dashboard":
         st.markdown("## 🧺 Interactive Service Menu")
@@ -408,26 +414,25 @@ elif st.session_state.logged_in and active_role == "customer":
             logistics_address = st.text_input("Logistic Route Destination Mapping", value=user_record.get("address", ""))
             
             st.markdown(f"### Total Cost: <span style='color:#10b981;'>KES {calculated_total_cost}</span>", unsafe_allow_html=True)
-            payment_method_gateway = st.selectbox("Secure Transaction Gateway Routing Matrix", ["M-Pesa Express", "Secure Card Payment Gateway"])
+            payment_method_gateway = st.selectbox("Secure Transaction Gateway Routing Matrix", ["M-Pesa", "Secure Card Payment Gateway"])
             
             if st.button("💳 Proceed & Trigger Payment Engine Settlement", use_container_width=True):
                 if not logistics_address:
                     st.error("Route mapping field context validation required before checkout.")
                 else:
                     unique_tracking_id = "BIGZ-" + datetime.now().strftime("%H%M%S")
+                    
+                    # REQUIREMENT 2: Dynamic Label Formatting Configuration for checkout systems
+                    formatted_gateway = "M-Pesa (Submitted)" if payment_method_gateway == "M-Pesa" else "Secure Card (Confirmed)"
+                    
                     new_order_record = {
                         "tracking": unique_tracking_id, "customer": user_record["name"], "email": active_email,
                         "service": selected_service_profile["name"], "quantity": f"{order_quantity} {selected_service_profile['unit']}", "cost": calculated_total_cost,
                         "pickup_logistics": f"{delivery_date} at {delivery_time}", "address": logistics_address,
-                        "payment_gateway": f"{payment_method_gateway} (Transaction Confirmed)", "status": "Pickup",
+                        "payment_gateway": formatted_gateway, "status": "Pickup",
                         "assigned_staff": "Pending Scheduling Hub Allocation", "created_at": datetime.now().strftime("%m/%d/%y")
                     }
                     st.session_state.orders.append(new_order_record)
-                    
-                    st.session_state.notifications.append({
-                        "text": f"New order successfully placed! Tracker ID: {unique_tracking_id}",
-                        "timestamp": datetime.now().strftime("%H:%M")
-                    })
                     st.balloons()
                     st.success(f"Processing Order Stream generated successfully! ID Token: {unique_tracking_id}")
                     st.rerun()
@@ -446,6 +451,7 @@ elif st.session_state.logged_in and active_role == "customer":
                         <span style="float: right; font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 8px; font-weight: bold;">{order['status']}</span>
                         <h4 style="margin: 0 0 5px 0; color: #1e3a8a;">{order['tracking']}</h4>
                         <p style="margin: 5px 0 0 0; font-size: 12px; color: #475569;">Package: {order['service']}</p>
+                        <p style="margin: 2px 0 0 0; font-size: 11px; color: #0284c7; font-weight: bold;">Billing: {order['payment_gateway']}</p>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -540,12 +546,13 @@ elif st.session_state.logged_in and active_role == "admin":
                 else:
                     matrix_ledger = [
                         {
-                            "Index Pointer": index,
                             "Order ID Vector": entry["tracking"],
                             "Client Context": entry["customer"],
+                            "Service Profile": entry["service"],
+                            "Settlement Model": entry["payment_gateway"],
                             "Processing Lifecycle Stage": entry["status"],
                             "Deployed Fleet Asset": entry["assigned_staff"],
-                            "System Timestamp": entry["created_at"]
+                            "Index Pointer": index
                         } for index, entry in enumerate(st.session_state.orders)
                     ]
                     orders_dataframe = pd.DataFrame(matrix_ledger)
@@ -568,17 +575,9 @@ elif st.session_state.logged_in and active_role == "admin":
                         allocated_staff_asset = st.selectbox("Re-assign Operational Fleet Worker Unit", st.session_state.staff_directory)
                         
                     if st.button("Commit Production Modification Instructions Override", use_container_width=True):
-                        old_status = st.session_state.orders[target_order_index]["status"]
                         st.session_state.orders[target_order_index]["status"] = updated_workflow_stage
                         st.session_state.orders[target_order_index]["assigned_staff"] = allocated_staff_asset
-                        
-                        tracking_id = st.session_state.orders[target_order_index]['tracking']
-                        st.session_state.notifications.append({
-                            "text": f"Order {tracking_id} status changed from {old_status} to {updated_workflow_stage}!",
-                            "timestamp": datetime.now().strftime("%H:%M")
-                        })
-                        
-                        st.success("Target workflow state configuration adjustments updated. Notification dispatched to client!")
+                        st.success("Target workflow state configuration adjustments updated.")
                         st.rerun()
 
             elif st.session_state.admin_filter_metric == "Clients":
@@ -622,10 +621,6 @@ elif st.session_state.logged_in and active_role == "admin":
                                     "message": composed_message_text,
                                     "time": datetime.now().strftime("%H:%M:%S")
                                 })
-                                st.session_state.notifications.append({
-                                    "text": f"New message from support staff: '{composed_message_text[:40]}...'",
-                                    "timestamp": datetime.now().strftime("%H:%M")
-                                })
                                 st.success("Message loaded onto the client's private stream securely.")
                                 st.rerun()
                                 
@@ -643,7 +638,7 @@ elif st.session_state.logged_in and active_role == "admin":
                             else:
                                 st.info(f"👤 **{active_message['sender_name']}** [{active_message['time']}]: {active_message['message']}")
 
-        # FEATURE 1: Professional Calculator Column Widget
+        # Professional Calculator Column Widget
         with workspace_calc_col:
             st.markdown("### 🧮 Admin Quick-Calc")
             st.markdown("""
@@ -669,14 +664,13 @@ elif st.session_state.logged_in and active_role == "admin":
             </div>
             """, unsafe_allow_html=True)
 
-    # FEATURE 2: Dynamic Live Price Update Suite Configuration View Layout
+    # Dynamic Live Price Update Suite Configuration View Layout
     elif menu_selection == "Dynamic Price Updates":
         st.markdown("## 🏷️ Live Service Catalog Price Adjustment Matrix")
-        st.markdown("Modify catalog prices directly below. Updates apply instantly to the consumer side menu without altering order logs or storage profiles.")
+        st.markdown("Modify catalog prices directly below. Updates register immediately to the consumer alert tracking bar.")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Display each service with individual text input boxes
         price_update_columns = st.columns(len(st.session_state.laundry_service_catalog))
         
         for index, service_item in enumerate(st.session_state.laundry_service_catalog):
@@ -689,7 +683,6 @@ elif st.session_state.logged_in and active_role == "admin":
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Dynamic inputs linked directly to values in the catalog state memory arrays
                 new_price_input = st.number_input(
                     f"New Rate ({service_item['unit']})",
                     key=f"input_p_{service_item['id']}",
@@ -698,16 +691,15 @@ elif st.session_state.logged_in and active_role == "admin":
                     step=5.0
                 )
                 
-                # Check if the value was modified and save immediately to session memory
                 if new_price_input != float(service_item['price']):
                     st.session_state.laundry_service_catalog[index]['price'] = new_price_input
                     
-                    # Notify clients about the change
-                    st.session_state.notifications.append({
-                        "text": f"Catalog price update: '{service_item['name']}' has been updated to KES {new_price_input} per {service_item['unit']}.",
-                        "timestamp": datetime.now().strftime("%H:%M")
+                    # Update the target alert node stream vector so client dashboard reads it immediately
+                    st.session_state.price_alerts.append({
+                        "text": f"The price for {service_item['name']} has been manually updated to KES {new_price_input} per {service_item['unit']}.",
+                        "timestamp": datetime.now().strftime("%H:%M:%S")
                     })
-                    st.success(f"Updated {service_item['id']}!")
+                    st.success(f"Updated {service_item['id']} catalog price indices!")
                     st.rerun()
 
     elif menu_selection == "User Accounts Profiles":
