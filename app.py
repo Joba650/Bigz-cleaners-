@@ -11,13 +11,48 @@ DATABASE_FILE_PATH = "users_db.json"
 APP_THEME_COLOR_PRIMARY = "#2563eb"
 APP_THEME_COLOR_SECONDARY = "#3b82f6"
 
-# Unified pricing catalog
+# Unified pricing catalog with system visual identifiers
 LAUNDRY_SERVICE_CATALOG = [
-    {"name": "Wash & Fold (General Wear)", "price": 100, "unit": "KG", "type": "Wash & Fold"},
-    {"name": "Wash, Dry, Iron & Fold", "price": 140, "unit": "KG", "type": "Wash & Fold"},
-    {"name": "Heavy Blanket / Duvet", "price": 400, "unit": "Piece", "type": "Dry Clean"},
-    {"name": "Official Suits (Jacket & Trousers)", "price": 500, "unit": "Suit", "type": "Dry Clean"},
-    {"name": "Sneaker / Canvas Shoe Cleaning", "price": 200, "unit": "Pair", "type": "Wash & Fold"}
+    {
+        "id": "srv_wash_fold",
+        "name": "Wash & Fold (General Wear)", 
+        "price": 100, 
+        "unit": "KG", 
+        "type": "Wash & Fold",
+        "image_url": "https://images.unsplash.com/photo-1545173168-9f1907e80033?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "srv_wash_iron",
+        "name": "Wash, Dry, Iron & Fold", 
+        "price": 140, 
+        "unit": "KG", 
+        "type": "Wash & Fold",
+        "image_url": "https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "srv_duvet",
+        "name": "Heavy Blanket / Duvet", 
+        "price": 400, 
+        "unit": "Piece", 
+        "type": "Dry Clean",
+        "image_url": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "srv_suits",
+        "name": "Official Suits (Jacket & Trousers)", 
+        "price": 500, 
+        "unit": "Suit", 
+        "type": "Dry Clean",
+        "image_url": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "srv_shoes",
+        "name": "Sneaker / Canvas Shoe Cleaning", 
+        "price": 200, 
+        "unit": "Pair", 
+        "type": "Wash & Fold",
+        "image_url": "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=500&auto=format&fit=crop&q=60"
+    }
 ]
 
 st.set_page_config(
@@ -30,7 +65,6 @@ st.set_page_config(
 # 2. PERSISTENT STORAGE LAYER ENGINE (JSON FILE BASE)
 # ==============================================================================
 def load_user_database() -> dict:
-    """Reads user records from disk file or returns system defaults if missing."""
     default_records = {
         "admin@bigz.com": {
             "name": "Theophilus mose",
@@ -65,9 +99,7 @@ def load_user_database() -> dict:
     except (json.JSONDecodeError, IOError):
         return default_records
 
-
 def save_user_profile(email_key: str, profile_data: dict) -> None:
-    """Saves or edits a specific user profile on local storage disk."""
     current_database = load_user_database()
     clean_email = email_key.lower().strip()
     current_database[clean_email] = profile_data
@@ -75,8 +107,6 @@ def save_user_profile(email_key: str, profile_data: dict) -> None:
     with open(DATABASE_FILE_PATH, "w", encoding="utf-8") as file_handle:
         json.dump(current_database, file_handle, indent=4)
 
-
-# Ensure user database is globally read from disk file on every rerun loop
 st.session_state.users = load_user_database()
 
 # ==============================================================================
@@ -87,7 +117,13 @@ state_defaults = {
     "current_user": "",
     "current_email": "",
     "current_role": "",
-    "messages": [],
+    "selected_service_id": LAUNDRY_SERVICE_CATALOG[0]["id"],  # Default selection pointer
+    "messages": [
+        {"name": "SYSTEM", "message": "Welcome to BIGZ Cleaners Messaging Desk Support.", "time": "12:00:00"}
+    ],
+    "notifications": [
+        {"text": "Welcome back! Check your service dashboard for active timelines.", "timestamp": "Just Now"}
+    ],
     "pending_verification": None,
     "inventory": {
         "Detergent (L)": 180, 
@@ -101,20 +137,6 @@ state_defaults = {
             "service": "Wash & Fold (General Wear)", "quantity": "5 KG", "cost": 500,
             "pickup_logistics": "05/28/26 at 10:00 AM", "address": "123 Saved Address From Street",
             "payment_gateway": "M-Pesa Express", "status": "Pickup", "assigned_staff": "Alex Chen",
-            "created_at": "05/26/26"
-        },
-        {
-            "tracking": "BIGZ-12342", "customer": "Sarah Chen", "email": "sarachen@gmail.com",
-            "service": "Wash, Dry, Iron & Fold", "quantity": "3 KG", "cost": 420,
-            "pickup_logistics": "05/28/26 at 12:00 PM", "address": "123 Saved Address From Street",
-            "payment_gateway": "Secure Card Payment Gateway", "status": "Washing", "assigned_staff": "Alex Chen",
-            "created_at": "05/26/26"
-        },
-        {
-            "tracking": "BIGZ-12344", "customer": "Sarah Chen", "email": "sarachen@gmail.com",
-            "service": "Heavy Blanket / Duvet", "quantity": "1 Piece", "cost": 400,
-            "pickup_logistics": "05/29/26 at 02:00 PM", "address": "123 Saved Address From Street",
-            "payment_gateway": "M-Pesa Express", "status": "Drying", "assigned_staff": "Theophilus mose",
             "created_at": "05/26/26"
         }
     ]
@@ -135,12 +157,32 @@ st.markdown(f"""
     }}
     .service-card {{ 
         background: white; 
-        padding: 22px; 
+        padding: 0px; 
         border-radius: 16px; 
         margin-bottom: 20px; 
         color: #0f172a; 
         box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); 
-        border-top: 5px solid {APP_THEME_COLOR_PRIMARY};
+        overflow: hidden;
+        border: 2px solid transparent;
+        transition: all 0.2s ease-in-out;
+    }}
+    .service-card-selected {{
+        background: white; 
+        padding: 0px; 
+        border-radius: 16px; 
+        margin-bottom: 20px; 
+        color: #0f172a; 
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); 
+        overflow: hidden;
+        border: 3px solid #3b82f6;
+    }}
+    .service-img {{
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+    }}
+    .service-content {{
+        padding: 16px;
     }}
     .footer {{ 
         text-align: center; 
@@ -179,12 +221,11 @@ if st.session_state.logged_in:
         </div>
         <h4 style="color: white; margin: 0;">{user_record['name']}</h4>
         <p style="color: #cbd5e1; font-size: 12px; margin: 2px 0 0 0;">{active_role.upper()} HUB</p>
-        <p style="color: #4ade80; font-size: 11px; margin-top: 6px;">● Secure Layer Connected</p>
     </div>
     """, unsafe_allow_html=True)
 
     if active_role == "customer":
-        menu_selection = st.sidebar.radio("Navigation Control Menu", ["Service Dashboard", "My Profile Account", "Support Messaging Desk"])
+        menu_selection = st.sidebar.radio("Navigation Control Menu", ["Service Dashboard", "💬 Messages Support Desk", "My Profile Account"])
     else:
         menu_selection = st.sidebar.radio("Navigation Control Menu", ["Main Operations Ledger", "User Accounts Profiles", "Inventory & Billings"])
 
@@ -216,9 +257,7 @@ if not st.session_state.logged_in:
         </div>
         """, unsafe_allow_html=True)
         
-        # FIXED: Added the columns assignment statement here to fix the NameError crash
         feature_one_col, feature_two_col = st.columns(2)
-        
         with feature_one_col:
             st.markdown(f"""
             <div style="background: white; padding: 22px; border-radius: 16px; min-height: 180px; color: #0f172a; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);">
@@ -240,15 +279,6 @@ if not st.session_state.logged_in:
                 </p>
             </div>
             """, unsafe_allow_html=True)
-            
-        st.markdown("""
-        <div style="margin-top: 45px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 25px;">
-            <p style="color: #cbd5e1; font-style: italic; font-size: 15px; margin-bottom: 5px;">
-                "Managing my laundry has never been simpler! Dynamic updates give complete peace of mind."
-            </p>
-            <p style="color: #60a5fa; font-weight: 600; font-size: 14px;">– Sarah Chen, Business Partner</p>
-        </div>
-        """, unsafe_allow_html=True)
 
     with authorization_portal_column:
         st.markdown("<div style='text-align: center; margin-bottom: 20px;'><h2 style='color: white; font-weight: 700;'>GET STARTED OR LOG IN</h2></div>", unsafe_allow_html=True)
@@ -269,10 +299,6 @@ if not st.session_state.logged_in:
                     save_user_profile(target_email, updated_profile)
                 st.session_state.pending_verification = None
                 st.success("Account Authorization Verified! Proceed to sign in.")
-                st.rerun()
-                
-            if st.button("❌ Deny Process Verification Framework / Return", use_container_width=True):
-                st.session_state.pending_verification = None
                 st.rerun()
         else:
             login_tab, signup_tab = st.tabs(["[ LOGIN ]", "[ SIGN UP ]"])
@@ -346,55 +372,69 @@ if not st.session_state.logged_in:
 # ==============================================================================
 elif st.session_state.logged_in and active_role == "customer":
     
-    # NEW FEATURE 1: Loyalty Rewards System Calculation
-    client_all_orders = [o for o in st.session_state.orders if o["email"] == active_email]
-    total_spent = sum([order["cost"] for order in client_all_orders])
-    loyalty_points = int(total_spent // 100) # 1 Point for every 100 KES spent
-    
-    if menu_selection == "Service Dashboard":
-        dashboard_header_col1, dashboard_header_col2 = st.columns([2, 1])
-        with dashboard_header_col1:
-            st.markdown("## 🧺 Premium Laundry Processing Packages Catalog")
-        with dashboard_header_col2:
+    # Broadcast alerts to clients dynamically
+    if st.session_state.notifications:
+        with st.container():
+            latest_notif = st.session_state.notifications[-1]
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, #eab308, #ca8a04); padding: 10px 18px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <span style="font-size: 11px; font-weight: bold; letter-spacing: 1px; opacity: 0.9;">BIGZ LOYALTY CLUB</span>
-                <h3 style="margin: 2px 0 0 0; font-weight: 800;">⭐ {loyalty_points} REWARD POINTS</h3>
+            <div style="background: linear-gradient(90deg, #1e3a8a, #2563eb); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div><strong>🔔 Notification Update:</strong> {latest_notif['text']}</div>
+                <div style="font-size: 11px; opacity: 0.8; font-weight: bold;">{latest_notif['timestamp']}</div>
             </div>
             """, unsafe_allow_html=True)
+
+    if menu_selection == "Service Dashboard":
+        st.markdown("## 🧺 Interactive Service Menu")
+        st.markdown("*Tap directly on any package card's selection button to load it instantly into your pipeline below.*")
         
-        card_column_1, card_column_2, card_column_3 = st.columns(3)
+        # Displaying services horizontally inside modern columns with visuals
+        card_columns = st.columns(len(LAUNDRY_SERVICE_CATALOG))
+        
         for index, item in enumerate(LAUNDRY_SERVICE_CATALOG):
-            selected_column = [card_column_1, card_column_2, card_column_3][index % 3]
-            with selected_column:
+            with card_columns[index]:
+                # Determine custom style variant based on click state tracker memory
+                is_selected = st.session_state.selected_service_id == item["id"]
+                style_class = "service-card-selected" if is_selected else "service-card"
+                
                 st.markdown(f"""
-                <div class="service-card">
-                    <h3 style="margin: 0; color: #1e3a8a;">{item['name']}</h3>
-                    <p style="margin: 5px 0; font-size: 14px; color: #64748b;">Processing Line: <b>{item['type']}</b></p>
-                    <h4 style="margin: 10px 0 0 0; color: #10b981;">KES {item['price']} per {item['unit']}</h4>
+                <div class="{style_class}">
+                    <img src="{item['image_url']}" class="service-img" alt="{item['name']}">
+                    <div class="service-content">
+                        <span style="font-size: 11px; font-weight: bold; background: #f1f5f9; padding: 3px 8px; border-radius: 20px; color: #475569;">
+                            {item['type']}
+                        </span>
+                        <h4 style="margin: 10px 0 5px 0; color: #0f172a; font-size: 15px; font-weight: 700; line-height: 1.3;">{item['name']}</h4>
+                        <p style="margin: 0; color: #10b981; font-weight: bold; font-size: 14px;">KES {item['price']} / {item['unit']}</p>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
                 
+                # Interactive trigger button built onto layout
+                button_label = "✅ Selected Package" if is_selected else "📥 Tap to Select"
+                if st.button(button_label, key=f"btn_{item['id']}", use_container_width=True, type="secondary" if not is_selected else "primary"):
+                    st.session_state.selected_service_id = item["id"]
+                    st.rerun()
+                
         st.markdown("---")
-        st.markdown("## ➕ Initialize Custom Order Pipeline")
+        
+        # Pull active service mapping structure from state selection engine index
+        selected_service_profile = next(s for s in LAUNDRY_SERVICE_CATALOG if s["id"] == st.session_state.selected_service_id)
+        
+        st.markdown(f"## ➕ Order Placement Pipeline (`Selected: {selected_service_profile['name']}`)")
         
         with st.expander("Configure Flowchart Multi-Step Order Intake Engine", expanded=True):
-            selected_type = st.radio("Step 1: Specify Pipeline Operational Processing Type", ["Wash & Fold", "Dry Clean"], horizontal=True)
-            filtered_services = [s for s in LAUNDRY_SERVICE_CATALOG if s["type"] == selected_type]
+            st.info(f"✨ Currently compiling invoice requirements for: **{selected_service_profile['name']}** at KES {selected_service_profile['price']} per {selected_service_profile['unit']}")
             
-            chosen_service_name = st.selectbox("Step 2: Select Targeted System Package", [s["name"] for s in filtered_services])
-            service_profile = next(s for s in LAUNDRY_SERVICE_CATALOG if s["name"] == chosen_service_name)
-            
-            order_quantity = st.number_input(f"Step 2.1: Quantity Selection ({service_profile['unit']})", min_value=1, value=1)
-            calculated_total_cost = service_profile["price"] * order_quantity
+            order_quantity = st.number_input(f"Step 1: Specify Quantity ({selected_service_profile['unit']})", min_value=1, value=1)
+            calculated_total_cost = selected_service_profile["price"] * order_quantity
             
             logistics_col_1, logistics_col_2 = st.columns(2)
-            delivery_date = logistics_col_1.date_input("Step 3: Schedule Pickup Date Anchor")
-            delivery_time = logistics_col_2.time_input("Step 3.1: Select Fleet Scheduling Time Window")
-            logistics_address = st.text_input("Step 3.2: Logistic Route Destination Mapping", value=user_record.get("address", ""))
+            delivery_date = logistics_col_1.date_input("Step 2: Schedule Pickup Date Anchor")
+            delivery_time = logistics_col_2.time_input("Step 2.1: Select Fleet Scheduling Time Window")
+            logistics_address = st.text_input("Step 2.2: Logistic Route Destination Mapping", value=user_record.get("address", ""))
             
             st.markdown(f"### Total Pipeline Cost Matrix Evaluation: <span style='color:#10b981;'>KES {calculated_total_cost}</span>", unsafe_allow_html=True)
-            payment_method_gateway = st.selectbox("Step 4: Secure Transaction Gateway Routing Matrix", ["M-Pesa Express", "Secure Card Payment Gateway"])
+            payment_method_gateway = st.selectbox("Step 3: Secure Transaction Gateway Routing Matrix", ["M-Pesa Express", "Secure Card Payment Gateway"])
             
             if st.button("💳 Proceed & Trigger Payment Engine Settlement", use_container_width=True):
                 if not logistics_address:
@@ -403,12 +443,17 @@ elif st.session_state.logged_in and active_role == "customer":
                     unique_tracking_id = "BIGZ-" + datetime.now().strftime("%H%M%S")
                     new_order_record = {
                         "tracking": unique_tracking_id, "customer": user_record["name"], "email": active_email,
-                        "service": chosen_service_name, "quantity": f"{order_quantity} {service_profile['unit']}", "cost": calculated_total_cost,
+                        "service": selected_service_profile["name"], "quantity": f"{order_quantity} {selected_service_profile['unit']}", "cost": calculated_total_cost,
                         "pickup_logistics": f"{delivery_date} at {delivery_time}", "address": logistics_address,
                         "payment_gateway": f"{payment_method_gateway} (Transaction Confirmed)", "status": "Pickup",
                         "assigned_staff": "Pending Scheduling Hub Allocation", "created_at": datetime.now().strftime("%m/%d/%y")
                     }
                     st.session_state.orders.append(new_order_record)
+                    
+                    st.session_state.notifications.append({
+                        "text": f"New order successfully placed! Tracker ID: {unique_tracking_id}",
+                        "timestamp": datetime.now().strftime("%H:%M")
+                    })
                     st.balloons()
                     st.success(f"Processing Order Stream generated successfully! ID Token: {unique_tracking_id}")
                     st.rerun()
@@ -430,6 +475,32 @@ elif st.session_state.logged_in and active_role == "customer":
                     </div>
                     """, unsafe_allow_html=True)
 
+    elif menu_selection == "💬 Messages Support Desk":
+        st.markdown("## 💬 Direct Helpdesk Communications Central Queue")
+        st.markdown("Text our management and administrative staff directly. Responses show up here instantly.")
+        
+        chat_input_column, chat_history_column = st.columns([1, 2], gap="medium")
+        
+        with chat_input_column:
+            composed_message_text = st.text_area("Write your message to the Admin:", placeholder="Type question about packages, deliveries or pricing...")
+            if st.button("✉️ Transmit Message Stream Payload", use_container_width=True):
+                if composed_message_text:
+                    st.session_state.messages.append({
+                        "name": f"{user_record['name']} (Client)",
+                        "message": composed_message_text,
+                        "time": datetime.now().strftime("%H:%M:%S")
+                    })
+                    st.success("Message dispatched to administrative terminal dashboard panels.")
+                    st.rerun()
+                    
+        with chat_history_column:
+            st.markdown("#### Live Communication History")
+            for active_message in reversed(st.session_state.messages):
+                if "Admin" in active_message["name"] or "SYSTEM" in active_message["name"]:
+                    st.warning(f"🛠️ **{active_message['name']}** [{active_message['time']}]: {active_message['message']}")
+                else:
+                    st.info(f"👤 **{active_message['name']}** [{active_message['time']}]: {active_message['message']}")
+
     elif menu_selection == "My Profile Account":
         st.markdown("## 👤 Configuration Preferences & Profile Management")
         profile_edit_col, settings_wallet_col = st.columns([1.1, 0.9], gap="large")
@@ -449,34 +520,43 @@ elif st.session_state.logged_in and active_role == "customer":
                     st.success("Storage registers updated effectively inside central database file.")
                     st.rerun()
 
-        with settings_wallet_col:
-            st.markdown("### Vault Storage Credit Methods Tokens")
-            for credit_card_mask in user_record.get("saved_cards", []):
-                st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #0f172a, #1e3a8a); color: white; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
-                    <p style="margin: 0; font-size: 10px; opacity: 0.7; letter-spacing: 1px;">BIGZ GATEWAY WALLET INTEGRATION</p>
-                    <h3 style="margin: 8px 0; letter-spacing: 3px;">{credit_card_mask}</h3>
-                    <p style="margin: 0; font-size: 11px; text-align: right; opacity: 0.9;">SECURE SIGNATURE VERIFIED</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-            st.markdown("### System Formulation Metrics & Preferences")
-            preferred_detergent = st.selectbox("Default Detergent Type Formula Profile", ["Scented Organic", "Hypoallergenic Neutral", "Heavy Stain-Fighter Extra"])
-            preferred_starch = st.selectbox("Garment Stiffness Calibration Ratio", ["No Starch Treatment", "Medium Crispy Stiffness", "High Executive Starched Stiff"])
-            if st.button("Overwrite Custom Configuration Maps"):
-                user_record["preferences"]["Detergent type"] = preferred_detergent
-                user_record["preferences"]["Starched Shirts"] = preferred_starch
-                save_user_profile(active_email, user_record)
-                st.success("Preferences synchronized permanently to backend database storage registries.")
-
 # ==============================================================================
 # 8. AUTHORIZED LAYER C: ADMINISTRATIVE HUB CONTROL ENGINE
 # ==============================================================================
 elif st.session_state.logged_in and active_role == "admin":
     
+    total_customers_count = len([u for u in st.session_state.users.values() if u["role"] == "customer"])
+    
     if menu_selection == "Main Operations Ledger":
         st.markdown("## ⚙️ Administration Engine Real-Time Process Control Dashboard")
         
+        analytics_col_1, analytics_col_2, analytics_col_3 = st.columns(3)
+        with analytics_col_1:
+            st.markdown(f"""
+            <div style="background: white; padding: 20px; border-radius: 12px; text-align: center; color: #0f172a; border-left: 5px solid #10b981; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <span style="font-size: 28px;">👥</span>
+                <h3 style="margin: 5px 0 0 0; font-weight: 800; color: #111827;">{total_customers_count} Registered Clients</h3>
+                <p style="margin: 0; font-size: 12px; color: #6b7280;">Utilizing Application Solutions</p>
+            </div>
+            """, unsafe_allow_html=True)
+        with analytics_col_2:
+            st.markdown(f"""
+            <div style="background: white; padding: 20px; border-radius: 12px; text-align: center; color: #0f172a; border-left: 5px solid #2563eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <span style="font-size: 28px;">📦</span>
+                <h3 style="margin: 5px 0 0 0; font-weight: 800; color: #111827;">{len(st.session_state.orders)} Orders</h3>
+                <p style="margin: 0; font-size: 12px; color: #6b7280;">Total System Log Count</p>
+            </div>
+            """, unsafe_allow_html=True)
+        with analytics_col_3:
+            st.markdown(f"""
+            <div style="background: white; padding: 20px; border-radius: 12px; text-align: center; color: #0f172a; border-left: 5px solid #f59e0b; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <span style="font-size: 28px;">💬</span>
+                <h3 style="margin: 5px 0 0 0; font-weight: 800; color: #111827;">{len(st.session_state.messages)} Logs</h3>
+                <p style="margin: 0; font-size: 12px; color: #6b7280;">Interactions In Queue Desk</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### 🔍 Enterprise Core System Service Tracking Pipeline")
         if not st.session_state.orders:
             st.info("System process logs contain zero running context objects currently.")
@@ -492,25 +572,7 @@ elif st.session_state.logged_in and active_role == "admin":
                 } for index, entry in enumerate(st.session_state.orders)
             ]
             orders_dataframe = pd.DataFrame(matrix_ledger)
-            
-            # NEW FEATURE 2: Interactive Real-Time Search & Pipeline Status Filter Engine
-            filter_col1, filter_col2 = st.columns([2, 1])
-            with filter_col1:
-                search_query = st.text_input("🔍 Quick Search Registry Ledger (Type Track ID or Customer Name)", placeholder="e.g. Sarah Chen or BIGZ-12341")
-            with filter_col2:
-                status_filter = st.selectbox("🎯 Filter by Processing Phase", ["All Statuses", "Pickup", "Washing", "Drying", "Fold", "Ready for Delivery"])
-            
-            # Applying live query rules to data layout view
-            filtered_df = orders_dataframe.copy()
-            if search_query:
-                filtered_df = filtered_df[
-                    filtered_df["Order ID Vector"].str.contains(search_query, case=False) | 
-                    filtered_df["Client Context"].str.contains(search_query, case=False)
-                ]
-            if status_filter != "All Statuses":
-                filtered_df = filtered_df[filtered_df["Processing Lifecycle Stage"] == status_filter]
-                
-            st.dataframe(filtered_df.drop(columns=["Index Pointer"]), use_container_width=True, hide_index=True)
+            st.dataframe(orders_dataframe.drop(columns=["Index Pointer"]), use_container_width=True, hide_index=True)
             
             st.markdown("#### Production Workflow State Manipulation Unit")
             control_col_1, control_col_2, control_col_3 = st.columns(3)
@@ -529,52 +591,49 @@ elif st.session_state.logged_in and active_role == "admin":
                 allocated_staff_asset = st.selectbox("Re-assign Operational Fleet Worker Unit", st.session_state.staff_directory)
                 
             if st.button("Commit Production Modification Instructions Override", use_container_width=True):
+                old_status = st.session_state.orders[target_order_index]["status"]
                 st.session_state.orders[target_order_index]["status"] = updated_workflow_stage
                 st.session_state.orders[target_order_index]["assigned_staff"] = allocated_staff_asset
                 
-                st.session_state.messages.append({
-                    "name": "SYSTEM PRODUCTION AUTOMATION BOT",
-                    "message": f"Order Framework Context Update Notification [{st.session_state.orders[target_order_index]['tracking']}]: Package lifecycle status progressed to '{updated_workflow_stage}' under deployment tracker asset: {allocated_staff_asset}.",
-                    "time": datetime.now().strftime("%H:%M:%S")
+                tracking_id = st.session_state.orders[target_order_index]['tracking']
+                st.session_state.notifications.append({
+                    "text": f"Order {tracking_id} status changed from {old_status} to {updated_workflow_stage}!",
+                    "timestamp": datetime.now().strftime("%H:%M")
                 })
-                st.success("Target workflow state configuration adjustments updated across operations ledger logs.")
+                
+                st.success("Target workflow state configuration adjustments updated. Notification dispatched to client!")
                 st.rerun()
 
         st.markdown("---")
-        col_g1, col_g2 = st.columns(2)
-        with col_g1:
-            st.markdown("### Distribution Mapping Dispatch Vectors Matrix")
-            st.info("🌐 Core GPS Fleet Matrix Mapping Connection Layer Connected Nominally.")
-            st.markdown("""
-            <div style="background: white; padding: 18px; border-radius: 12px; color: black; border-left: 5px solid #a855f7;">
-                <b>Active Shift Route Log Tracking Checklist:</b><br>
-                • Alex Chen — Route Segment Northwest Alpha Operational Block (08:00 - 12:00)<br>
-                • Marix Mason — Route Segment Central Core Cargo Zone (13:00 - 17:00)
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with col_g2:
-            st.markdown("### Expand Core Product Catalog Framework Matrix")
-            with st.form("catalog_append_form"):
-                append_catalog_name = st.text_input("New Core Service Label")
-                append_catalog_price = st.number_input("Rate Calculation Standard Asset Value (KES)", min_value=10, value=150)
-                append_catalog_unit = st.selectbox("Unit Metric Scale", ["KG", "Piece", "Pair", "Suit"])
-                append_catalog_category = st.selectbox("Pipeline System Assignment Type Context", ["Wash & Fold", "Dry Clean"])
-                
-                if st.form_submit_button("Append Service Package Vector To Core Arrays"):
-                    if append_catalog_name:
-                        LAUNDRY_SERVICE_CATALOG.append({
-                            "name": append_catalog_name, 
-                            "price": append_catalog_price, 
-                            "unit": append_catalog_unit, 
-                            "type": append_catalog_category
-                        })
-                        st.success(f"Production matrix catalog expanded: Added target row asset vector '{append_catalog_name}'")
-                    else:
-                        st.error("Operation validation aborted. Name parameters missing definitions.")
+        st.markdown("### 💬 Active Communication Matrix Hub (Responding to Clients)")
+        chat_input_column, chat_history_column = st.columns([1, 2], gap="medium")
+        
+        with chat_input_column:
+            composed_message_text = st.text_area("Write response message payload back to clients:", placeholder="Enter answer details here...")
+            if st.button("Transmit Packet Matrix Payload To Chat Logs", use_container_width=True):
+                if composed_message_text:
+                    st.session_state.messages.append({
+                        "name": "Theophilus (Admin)",
+                        "message": composed_message_text,
+                        "time": datetime.now().strftime("%H:%M:%S")
+                    })
+                    st.session_state.notifications.append({
+                        "text": f"New message from support staff: '{composed_message_text[:40]}...'",
+                        "timestamp": datetime.now().strftime("%H:%M")
+                    })
+                    st.success("Message loaded onto public stream channels successfully.")
+                    st.rerun()
+                    
+        with chat_history_column:
+            st.markdown("#### Message Streaming Framework Ledger Streams")
+            for active_message in reversed(st.session_state.messages):
+                if "Admin" in active_message["name"]:
+                    st.warning(f"⚙️ **{active_message['name']}** [{active_message['time']}]: {active_message['message']}")
+                else:
+                    st.info(f"👤 **{active_message['name']}** [{active_message['time']}]: {active_message['message']}")
 
     elif menu_selection == "User Accounts Profiles":
-        st.markdown("## 👥 Active Database Consumers Master Profiles Register Ledger (Recalled From JSON Database)")
+        st.markdown("## 👥 Active Database Consumers Master Profiles Register Ledger")
         records_pool = []
         for database_email, profile_node in st.session_state.users.items():
             if profile_node["role"] == "customer":
@@ -586,8 +645,6 @@ elif st.session_state.logged_in and active_role == "admin":
                 })
         if records_pool:
             st.table(pd.DataFrame(records_pool))
-        else:
-            st.caption("No registered records located inside user data arrays.")
 
     elif menu_selection == "Inventory & Billings":
         st.markdown("## 📊 Strategic Allocation Audits & Billing Balance Ledgers")
@@ -598,70 +655,15 @@ elif st.session_state.logged_in and active_role == "admin":
             inventory_dataframe = pd.DataFrame.from_dict(st.session_state.inventory, orient='index', columns=['Current Resource Level'])
             st.bar_chart(inventory_dataframe)
             
-            st.markdown("#### Adjust Supply Levels")
-            for asset_key, quantity_value in st.session_state.inventory.items():
-                updated_inventory_quantity = st.number_input(f"Stock Level Reservoir Monitor: {asset_key}", min_value=0, value=int(quantity_value), key=f"inv_input_{asset_key}")
-                st.session_state.inventory[asset_key] = updated_inventory_quantity
-            
         with fiscal_card_col:
             st.markdown("### Central Aggregated Accounting Audited Summaries")
             gross_system_revenue = sum([order_record["cost"] for order_record in st.session_state.orders])
-            
-            # NEW FEATURE 3: Predictive Smart Growth Matrix Valuation Forecast Card
-            projected_forecast_revenue = gross_system_revenue * 1.25 # Projected 25% scale multiplier loop
-            
-            accounting_col1, accounting_col2 = st.columns(2)
-            with accounting_col1:
-                st.markdown(f"""
-                <div style="background: white; color: #0f172a; padding: 22px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #10b981;">
-                    <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: bold; letter-spacing: 0.5px;">GROSS REVENUE POOL</p>
-                    <h2 style="margin: 5px 0; color: #10b981; font-weight: 800;">KES {gross_system_revenue:,.2f}</h2>
-                    <p style="font-size: 11px; margin: 0; color: #64748b;">Audits: Functioning Nominally</p>
-                </div>
-                """, unsafe_allow_html=True)
-            with accounting_col2:
-                st.markdown(f"""
-                <div style="background: white; color: #0f172a; padding: 22px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid {APP_THEME_COLOR_SECONDARY};">
-                    <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: bold; letter-spacing: 0.5px;">NEXT MONTH FORECAST</p>
-                    <h2 style="margin: 5px 0; color: {APP_THEME_COLOR_SECONDARY}; font-weight: 800;">KES {projected_forecast_revenue:,.2f}</h2>
-                    <p style="font-size: 11px; margin: 0; color: #16a34a;">📈 +25% Growth Loop Expected</p>
-                </div>
-                """, unsafe_allow_html=True)
-
-# ==============================================================================
-# 9. UNIVERSAL LOGICAL LINK: LIVE COMMUNICATIONS CENTRAL CHAT DECK ROUTER
-# ==============================================================================
-if st.session_state.logged_in:
-    show_chat_gate = False
-    if active_role == "customer" and menu_selection == "Support Messaging Desk":
-        show_chat_gate = True
-    elif active_role == "admin" and menu_selection == "Main Operations Ledger":
-        show_chat_gate = True
-        
-    if show_chat_gate:
-        st.markdown("---")
-        st.markdown("## 💬 Centralized Communications Network Support Routing Hub")
-        chat_input_column, chat_history_column = st.columns([1, 2], gap="medium")
-        
-        with chat_input_column:
-            composed_message_text = st.text_area("Compose System Operational Message Dispatch Package:", placeholder="Enter your logging parameters here...")
-            if st.button("Transmit Packet Matrix Payload To Central Queue", use_container_width=True):
-                if composed_message_text:
-                    st.session_state.messages.append({
-                        "name": user_record["name"],
-                        "message": composed_message_text,
-                        "time": datetime.now().strftime("%H:%M:%S")
-                    })
-                    st.success("Data stream message matrix package successfully loaded into core stream channels.")
-                    st.rerun()
-                    
-        with chat_history_column:
-            st.markdown("#### Message Streaming Framework Ledger Streams")
-            if not st.session_state.messages:
-                st.caption("Active operational chat communication channels contain zero data logs traffic objects.")
-            else:
-                for active_message in reversed(st.session_state.messages):
-                    st.info(f"🕒 [{active_message['time']}] **{active_message['name']}**: {active_message['message']}")
+            st.markdown(f"""
+            <div style="background: white; color: #0f172a; padding: 30px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #10b981;">
+                <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: bold; letter-spacing: 0.5px;">GROSS REVENUE FINANCIAL VALUE POOL</p>
+                <h1 style="margin: 10px 0 25px 0; color: #10b981; font-size: 42px; font-weight: 800;">KES {gross_system_revenue:,.2f}</h1>
+            </div>
+            """, unsafe_allow_html=True)
 
 # ==============================================================================
 # 10. SYSTEM RUNTIME APP PLATFORM TERMINAL BASE FOOTER
