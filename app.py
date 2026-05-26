@@ -1,26 +1,37 @@
-import streamlit as st
-import pandas as pd
-from datetime import datetime
-import json
 import os
+import json
+from datetime import datetime
+import pandas as pd
+import streamlit as st
 
-# =========================================
-# PAGE CONFIGURATION
-# =========================================
+# ==============================================================================
+# 1. GLOBAL SYSTEM CONFIGURATION & CONSTANTS
+# ==============================================================================
+DATABASE_FILE_PATH = "users_db.json"
+APP_THEME_COLOR_PRIMARY = "#2563eb"
+APP_THEME_COLOR_SECONDARY = "#3b82f6"
+
+# Unified pricing catalog
+LAUNDRY_SERVICE_CATALOG = [
+    {"name": "Wash & Fold (General Wear)", "price": 100, "unit": "KG", "type": "Wash & Fold"},
+    {"name": "Wash, Dry, Iron & Fold", "price": 140, "unit": "KG", "type": "Wash & Fold"},
+    {"name": "Heavy Blanket / Duvet", "price": 400, "unit": "Piece", "type": "Dry Clean"},
+    {"name": "Official Suits (Jacket & Trousers)", "price": 500, "unit": "Suit", "type": "Dry Clean"},
+    {"name": "Sneaker / Canvas Shoe Cleaning", "price": 200, "unit": "Pair", "type": "Wash & Fold"}
+]
+
 st.set_page_config(
     page_title="BIGZ CLEANERS",
     page_icon="🧺",
     layout="wide"
 )
 
-# =========================================
-# PERSISTENT DATABASE ENGINE (JSON FILE)
-# =========================================
-DB_FILE = "users_db.json"
-
-def load_users_from_db():
-    """Reads users from the permanent JSON file or creates the defaults if empty."""
-    default_users = {
+# ==============================================================================
+# 2. PERSISTENT STORAGE LAYER ENGINE (JSON FILE BASE)
+# ==============================================================================
+def load_user_database() -> dict:
+    """Reads user records from disk file or returns system defaults if missing."""
+    default_records = {
         "admin@bigz.com": {
             "name": "Theophilus mose",
             "phone": "0116993710",
@@ -36,58 +47,55 @@ def load_users_from_db():
             "address": "123 Saved Address From Street, West, Buil, 4003",
             "verified": True,
             "saved_cards": ["•••• •••• •••• 4321"],
-            "preferences": {"Detergent type": "Scented Organic", "Starched Shirts": "Medium Crispy Stiffness"}
+            "preferences": {
+                "Detergent type": "Scented Organic", 
+                "Starched Shirts": "Medium Crispy Stiffness"
+            }
         }
     }
     
-    if not os.path.exists(DB_FILE):
-        with open(DB_FILE, "w") as f:
-            json.dump(default_users, f, indent=4)
-        return default_users
+    if not os.path.exists(DATABASE_FILE_PATH):
+        with open(DATABASE_FILE_PATH, "w", encoding="utf-8") as file_handle:
+            json.dump(default_records, file_handle, indent=4)
+        return default_records
     
     try:
-        with open(DB_FILE, "r") as f:
-            return json.load(f)
-    except Exception:
-        return default_users
+        with open(DATABASE_FILE_PATH, "r", encoding="utf-8") as file_handle:
+            return json.load(file_handle)
+    except (json.JSONDecodeError, IOError):
+        return default_records
 
-def save_user_to_db(email, profile_data):
-    """Writes a new or modified user directly to the local disk database file."""
-    current_db = load_users_from_db()
-    current_db[email.lower().strip()] = profile_data
-    with open(DB_FILE, "w") as f:
-        json.dump(current_db, f, indent=4)
 
-# Always load fresh user registry on script run to recall all signups
-st.session_state.users = load_users_from_db()
+def save_user_profile(email_key: str, profile_data: dict) -> None:
+    """Saves or edits a specific user profile on local storage disk."""
+    current_database = load_user_database()
+    clean_email = email_key.lower().strip()
+    current_database[clean_email] = profile_data
+    
+    with open(DATABASE_FILE_PATH, "w", encoding="utf-8") as file_handle:
+        json.dump(current_database, file_handle, indent=4)
 
-# =========================================
-# CENTRAL RUNTIME SESSION STATES
-# =========================================
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "current_user" not in st.session_state:
-    st.session_state.current_user = ""
-if "current_email" not in st.session_state:
-    st.session_state.current_email = ""
-if "current_role" not in st.session_state:
-    st.session_state.current_role = ""
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "pending_verification" not in st.session_state:
-    st.session_state.pending_verification = None
 
-if "inventory" not in st.session_state:
-    st.session_state.inventory = {
+# Ensure user database is globally read from disk file on every rerun loop
+st.session_state.users = load_user_database()
+
+# ==============================================================================
+# 3. INITIALIZE STATE RUNTIME MEMORY
+# ==============================================================================
+state_defaults = {
+    "logged_in": False,
+    "current_user": "",
+    "current_email": "",
+    "current_role": "",
+    "messages": [],
+    "pending_verification": None,
+    "inventory": {
         "Detergent (L)": 180, 
         "Fabric Softener (L)": 95, 
         "Tags & Bags (Pcs)": 450
-    }
-if "staff" not in st.session_state:
-    st.session_state.staff = ["Alex Chen", "Marix Mason", "John Doe", "Theophilus mose"]
-
-if "orders" not in st.session_state:
-    st.session_state.orders = [
+    },
+    "staff_directory": ["Alex Chen", "Marix Mason", "John Doe", "Theophilus mose"],
+    "orders": [
         {
             "tracking": "BIGZ-12341", "customer": "Sarah Chen", "email": "sarachen@gmail.com",
             "service": "Wash & Fold (General Wear)", "quantity": "5 KG", "cost": 500,
@@ -99,7 +107,7 @@ if "orders" not in st.session_state:
             "tracking": "BIGZ-12342", "customer": "Sarah Chen", "email": "sarachen@gmail.com",
             "service": "Wash, Dry, Iron & Fold", "quantity": "3 KG", "cost": 420,
             "pickup_logistics": "05/28/26 at 12:00 PM", "address": "123 Saved Address From Street",
-            "payment_gateway": "Secure Card Payment Gateway", "status": "Washing", "assigned_staff": "Alex Staff",
+            "payment_gateway": "Secure Card Payment Gateway", "status": "Washing", "assigned_staff": "Alex Chen",
             "created_at": "05/26/26"
         },
         {
@@ -110,85 +118,73 @@ if "orders" not in st.session_state:
             "created_at": "05/26/26"
         }
     ]
+}
 
-# =========================================
-# ADVANCED CUSTOM GRAPHICS INTERFACE CSS
-# =========================================
-st.markdown("""
+for state_key, default_value in state_defaults.items():
+    if state_key not in st.session_state:
+        st.session_state[state_key] = default_value
+
+# ==============================================================================
+# 4. GRAPHICAL UI ELEMENT CUSTOMIZATION (CSS STYLE CODES)
+# ==============================================================================
+st.markdown(f"""
 <style>
-.stApp {
-    background: linear-gradient(135deg, #020617, #0f172a, #1e3a8a, #0284c7);
-    background-attachment: fixed;
-}
-.service-card { 
-    background: white; 
-    padding: 22px; 
-    border-radius: 16px; 
-    margin-bottom: 20px; 
-    color: #0f172a; 
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); 
-    border-top: 5px solid #2563eb;
-}
-.track-box { 
-    background: #f8fafc; 
-    color: #0f172a; 
-    padding: 25px; 
-    border-radius: 18px; 
-    margin-top: 20px; 
-    border-left: 6px solid #3b82f6; 
-}
-.footer { 
-    text-align: center; 
-    color: #94a3b8; 
-    padding: 40px 0; 
-    margin-top: 60px; 
-    border-top: 1px solid rgba(255,255,255,0.1); 
-}
-div[data-testid="stExpander"] {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-}
+    .stApp {{
+        background: linear-gradient(135deg, #020617, #0f172a, #1e3a8a, #0284c7);
+        background-attachment: fixed;
+    }}
+    .service-card {{ 
+        background: white; 
+        padding: 22px; 
+        border-radius: 16px; 
+        margin-bottom: 20px; 
+        color: #0f172a; 
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); 
+        border-top: 5px solid {APP_THEME_COLOR_PRIMARY};
+    }}
+    .footer {{ 
+        text-align: center; 
+        color: #94a3b8; 
+        padding: 40px 0; 
+        margin-top: 60px; 
+        border-top: 1px solid rgba(255,255,255,0.1); 
+    }}
+    div[data-testid="stExpander"] {{
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================
-# STANDARD BASE DATA DEFINITIONS
-# =========================================
-services = [
-    {"name": "Wash & Fold (General Wear)", "price": 100, "unit": "KG", "type": "Wash & Fold"},
-    {"name": "Wash, Dry, Iron & Fold", "price": 140, "unit": "KG", "type": "Wash & Fold"},
-    {"name": "Heavy Blanket / Duvet", "price": 400, "unit": "Piece", "type": "Dry Clean"},
-    {"name": "Official Suits (Jacket & Trousers)", "price": 500, "unit": "Suit", "type": "Dry Clean"},
-    {"name": "Sneaker / Canvas Shoe Cleaning", "price": 200, "unit": "Pair", "type": "Wash & Fold"}
-]
-
-# =========================================
-# PERSISTENT SYSTEM SIDEBAR CONTROL PANEL
-# =========================================
+# ==============================================================================
+# 5. PERSISTENT SYSTEM SIDEBAR INTERFACE
+# ==============================================================================
 st.sidebar.title("🧺 BIGZ CLEANERS")
+
 if st.session_state.logged_in:
-    user_email = st.session_state.current_email
-    user_record = st.session_state.users.get(user_email)
+    active_email = st.session_state.current_email
+    user_record = st.session_state.users.get(active_email)
     
-    # Redundant fail-safe check if user profile entry vanishes from storage cache
+    # Redundant protection catch to prevent crash if database structure alters
     if not user_record:
         st.session_state.logged_in = False
         st.rerun()
         
-    user_role = st.session_state.current_role
+    active_role = st.session_state.current_role
+    initial_letter = user_record['name'][0] if user_record.get('name') else 'U'
     
     st.sidebar.markdown(f"""
     <div style="text-align: center; padding: 15px 0; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 20px;">
-        <div style="width: 70px; height: 70px; background: #3b82f6; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: white;">
-            {user_record['name'][0] if user_record.get('name') else 'U'}
+        <div style="width: 70px; height: 70px; background: {APP_THEME_COLOR_SECONDARY}; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: white;">
+            {initial_letter}
         </div>
         <h4 style="color: white; margin: 0;">{user_record['name']}</h4>
-        <p style="color: #cbd5e1; font-size: 12px; margin: 2px 0 0 0;">{user_role.upper()} HUB</p>
+        <p style="color: #cbd5e1; font-size: 12px; margin: 2px 0 0 0;">{active_role.upper()} HUB</p>
         <p style="color: #4ade80; font-size: 11px; margin-top: 6px;">● Secure Layer Connected</p>
     </div>
     """, unsafe_allow_html=True)
 
-    if user_role == "customer":
+    if active_role == "customer":
         menu_selection = st.sidebar.radio("Navigation Control Menu", ["Service Dashboard", "My Profile Account", "Support Messaging Desk"])
     else:
         menu_selection = st.sidebar.radio("Navigation Control Menu", ["Main Operations Ledger", "User Accounts Profiles", "Inventory & Billings"])
@@ -203,13 +199,13 @@ if st.session_state.logged_in:
 else:
     st.sidebar.info("Awaiting verification access signatures.")
 
-# =========================================
-# LAYER A: SPLIT LANDING VIEW (UNAUTHENTICATED)
-# =========================================
+# ==============================================================================
+# 6. UNVERIFIED LAYER A: PUBLIC LANDING ARCHITECTURE
+# ==============================================================================
 if not st.session_state.logged_in:
-    left_hero, right_portal = st.columns([1.1, 0.9], gap="large")
+    hero_column, authorization_portal_column = st.columns([1.1, 0.9], gap="large")
     
-    with left_hero:
+    with hero_column:
         st.markdown("""
         <div style="padding: 10px 0;">
             <h1 style="color: white; font-size: 46px; font-weight: 800; line-height: 1.2; margin-bottom: 15px;">
@@ -221,19 +217,19 @@ if not st.session_state.logged_in:
         </div>
         """, unsafe_allow_html=True)
         
-        col_f1, col_f2 = st.columns(2)
-        with col_f1:
-            st.markdown("""
+        feature_one_col, feature_two_col = st.columns(2)
+        with feature_one_col:
+            st.markdown(f"""
             <div style="background: white; padding: 22px; border-radius: 16px; min-height: 180px; color: #0f172a; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);">
                 <span style="font-size: 32px;">📥</span>
-                <h4 style="margin-top: 10px; font-weight: 700; color: #1e3a8a; margin-bottom: 5px;">FOR CLIENTS:</h4>
+                <h4 style="margin-top: 10px; font-weight: 700; color: {APP_THEME_COLOR_PRIMARY}; margin-bottom: 5px;">FOR CLIENTS:</h4>
                 <p style="font-size: 13px; color: #475569; line-height: 1.4; margin: 0;">
                     Schedule Pickups, Track Your Wash Status, and Manage Payments effortlessly.
                 </p>
             </div>
             """, unsafe_allow_html=True)
             
-        with col_f2:
+        with feature_two_col:
             st.markdown("""
             <div style="background: white; padding: 22px; border-radius: 16px; min-height: 180px; color: #0f172a; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);">
                 <span style="font-size: 32px;">📊</span>
@@ -253,7 +249,7 @@ if not st.session_state.logged_in:
         </div>
         """, unsafe_allow_html=True)
 
-    with right_portal:
+    with authorization_portal_column:
         st.markdown("<div style='text-align: center; margin-bottom: 20px;'><h2 style='color: white; font-weight: 700;'>GET STARTED OR LOG IN</h2></div>", unsafe_allow_html=True)
         
         if st.session_state.pending_verification:
@@ -264,12 +260,12 @@ if not st.session_state.logged_in:
             </div>
             """, unsafe_allow_html=True)
             
-            if st.button("✅ Simulate Incoming Verification Email Confirm Link", use_container_width=True):
-                email_target = st.session_state.pending_verification.lower().strip()
-                if email_target in st.session_state.users:
-                    profile_obj = st.session_state.users[email_target]
-                    profile_obj["verified"] = True
-                    save_user_to_db(email_target, profile_obj) # Commit verified attribute modification to DB
+            if st.button("✅ Simulate Incoming Verification Confirm Link", use_container_width=True):
+                target_email = st.session_state.pending_verification.lower().strip()
+                if target_email in st.session_state.users:
+                    updated_profile = st.session_state.users[target_email]
+                    updated_profile["verified"] = True
+                    save_user_profile(target_email, updated_profile)
                 st.session_state.pending_verification = None
                 st.success("Account Authorization Verified! Proceed to sign in.")
                 st.rerun()
@@ -283,20 +279,22 @@ if not st.session_state.logged_in:
             with login_tab:
                 st.markdown("<p style='color: #cbd5e1; font-weight: bold; margin-bottom: 15px;'>WELCOME BACK</p>", unsafe_allow_html=True)
                 with st.form("login_panel_form"):
-                    raw_email = st.text_input("Registered Email Address", placeholder="name@domain.com")
-                    login_password = st.text_input("Secure Account Password", type="password", placeholder="••••••••")
+                    input_email = st.text_input("Registered Email Address", placeholder="name@domain.com")
+                    input_password = st.text_input("Secure Account Password", type="password", placeholder="••••••••")
+                    
                     if st.form_submit_button("LOG IN TO DASHBOARD", use_container_width=True):
-                        login_email = raw_email.lower().strip()
-                        if login_email in st.session_state.users:
-                            user = st.session_state.users[login_email]
-                            if user["password"] == login_password:
-                                if not user.get("verified", False):
-                                    st.error("Account registration sequence is unverified. Halt process entry.")
+                        # Strict case-insensitivity lowercasing filter check applied
+                        clean_login_email = input_email.lower().strip()
+                        if clean_login_email in st.session_state.users:
+                            matched_user_record = st.session_state.users[clean_login_email]
+                            if matched_user_record["password"] == input_password:
+                                if not matched_user_record.get("verified", False):
+                                    st.error("Account registration sequence remains unverified. Entry halted.")
                                 else:
                                     st.session_state.logged_in = True
-                                    st.session_state.current_user = user["name"]
-                                    st.session_state.current_email = login_email
-                                    st.session_state.current_role = user["role"]
+                                    st.session_state.current_user = matched_user_record["name"]
+                                    st.session_state.current_email = clean_login_email
+                                    st.session_state.current_role = matched_user_record["role"]
                                     st.rerun()
                             else:
                                 st.error("Invalid password authentication handshake.")
@@ -305,309 +303,332 @@ if not st.session_state.logged_in:
                             
             with signup_tab:
                 st.markdown("<p style='color: #cbd5e1; font-weight: bold; margin-bottom: 15px;'>CREATE YOUR FREE ACCOUNT</p>", unsafe_allow_html=True)
-                reg_role = st.selectbox("Assign Profile Context Target Blueprint:", ["Client / Consumer Account", "Admin / Production Staff"])
+                selected_role_type = st.selectbox("Assign Profile Blueprint Type:", ["Client / Consumer Account", "Admin / Production Staff"])
                 
                 with st.form("signup_panel_form"):
-                    new_name = st.text_input("Full Signature Name")
-                    new_phone = st.text_input("Phone Communication Line")
-                    raw_new_email = st.text_input("Email Account Address")
-                    new_address = st.text_input("Primary Physical Delivery Location")
-                    new_password = st.text_input("Set Custom Access Password", type="password")
+                    signup_name = st.text_input("Full Signature Name")
+                    signup_phone = st.text_input("Phone Communication Line")
+                    signup_email_raw = st.text_input("Email Account Address")
+                    signup_address = st.text_input("Primary Physical Delivery Location")
+                    signup_password = st.text_input("Set Custom Access Password", type="password")
                     
                     if st.form_submit_button("SUBMIT APPLICATION FILES", use_container_width=True):
-                        new_email = raw_new_email.lower().strip()
-                        if new_email in st.session_state.users:
+                        clean_signup_email = signup_email_raw.lower().strip()
+                        if clean_signup_email in st.session_state.users:
                             st.error("Account token identifier already registered.")
-                        elif not new_email or not new_password:
+                        elif not clean_signup_email or not signup_password:
                             st.error("Required fields cannot remain blank.")
                         else:
-                            assigned_role = "customer" if "Client" in reg_role else "admin"
-                            is_verified = True if assigned_role == "admin" else False
+                            assigned_role = "customer" if "Client" in selected_role_type else "admin"
+                            is_verified_by_default = True if assigned_role == "admin" else False
                             
-                            profile_blueprint = {
-                                "name": new_name, "phone": new_phone, "address": new_address,
-                                "password": new_password, "role": assigned_role, "verified": is_verified,
+                            new_profile_blueprint = {
+                                "name": signup_name, 
+                                "phone": signup_phone, 
+                                "address": signup_address,
+                                "password": signup_password, 
+                                "role": assigned_role, 
+                                "verified": is_verified_by_default,
                                 "saved_cards": ["•••• •••• •••• 1111"],
                                 "preferences": {"Detergent type": "Scented Organic", "Starched Shirts": "No Starch Treatment"}
                             }
                             
-                            # Write immediately to local database file to persist the user record!
-                            save_user_to_db(new_email, profile_blueprint)
+                            # Persistent filesystem file save execution
+                            save_user_profile(clean_signup_email, new_profile_blueprint)
                             
                             if assigned_role == "customer":
-                                st.session_state.pending_verification = new_email
+                                st.session_state.pending_verification = clean_signup_email
                             else:
                                 st.success("Administrative clearance granted! Log in via portal.")
                             st.rerun()
 
-# =========================================
-# LAYER B: AUTHENTICATED CLIENT DASHBOARDS
-# =========================================
-elif st.session_state.logged_in and user_role == "customer":
+# ==============================================================================
+# 7. AUTHORIZED LAYER B: CONSUMER WORKSPACE PAGES
+# ==============================================================================
+elif st.session_state.logged_in and active_role == "customer":
     
     if menu_selection == "Service Dashboard":
-        st.markdown("## 🧺 Dashboard Access: Premium Laundry Catalog")
+        st.markdown("## 🧺 Premium Laundry Processing Packages Catalog")
         
-        col_c1, col_c2, col_c3 = st.columns(3)
-        for idx, s in enumerate(services):
-            target_col = [col_c1, col_c2, col_c3][idx % 3]
-            with target_col:
+        card_column_1, card_column_2, card_column_3 = st.columns(3)
+        for index, item in enumerate(LAUNDRY_SERVICE_CATALOG):
+            selected_column = [card_column_1, card_column_2, card_column_3][index % 3]
+            with selected_column:
                 st.markdown(f"""
                 <div class="service-card">
-                    <h3 style="margin: 0; color: #1e3a8a;">{s['name']}</h3>
-                    <p style="margin: 5px 0; font-size: 14px; color: #64748b;">Processing Line: <b>{s['type']}</b></p>
-                    <h4 style="margin: 10px 0 0 0; color: #10b981;">KES {s['price']} per {s['unit']}</h4>
+                    <h3 style="margin: 0; color: #1e3a8a;">{item['name']}</h3>
+                    <p style="margin: 5px 0; font-size: 14px; color: #64748b;">Processing Line: <b>{item['type']}</b></p>
+                    <h4 style="margin: 10px 0 0 0; color: #10b981;">KES {item['price']} per {item['unit']}</h4>
                 </div>
                 """, unsafe_allow_html=True)
                 
         st.markdown("---")
-        st.markdown("## ➕ Initialize Custom Order Sequence Pipeline")
+        st.markdown("## ➕ Initialize Custom Order Pipeline")
         
         with st.expander("Configure Flowchart Multi-Step Order Intake Engine", expanded=True):
-            srv_type = st.radio("Step 1: Specify Operational Processing Pipeline Type", ["Wash & Fold", "Dry Clean"], horizontal=True)
-            f_services = [s for s in services if s["type"] == srv_type]
+            selected_type = st.radio("Step 1: Specify Pipeline Operational Processing Type", ["Wash & Fold", "Dry Clean"], horizontal=True)
+            filtered_services = [s for s in LAUNDRY_SERVICE_CATALOG if s["type"] == selected_type]
             
-            selected_s = st.selectbox("Step 2: Select Targeted System Package", [s["name"] for s in f_services])
-            matched_s = next(s for s in services if s["name"] == selected_s)
+            chosen_service_name = st.selectbox("Step 2: Select Targeted System Package", [s["name"] for s in filtered_services])
+            service_profile = next(s for s in LAUNDRY_SERVICE_CATALOG if s["name"] == chosen_service_name)
             
-            qty = st.number_input(f"Step 2.1: Quantity Selection ({matched_s['unit']})", min_value=1, value=1)
-            total_cost = matched_s["price"] * qty
+            order_quantity = st.number_input(f"Step 2.1: Quantity Selection ({service_profile['unit']})", min_value=1, value=1)
+            calculated_total_cost = service_profile["price"] * order_quantity
             
-            col_t1, col_t2 = st.columns(2)
-            p_date = col_t1.date_input("Step 3: Schedule Pickup Date Anchor")
-            p_time = col_t2.time_input("Step 3.1: Select Fleet Scheduling Time Window")
-            p_addr = st.text_input("Step 3.2: Logistic Route Destination Mapping", value=user_record.get("address", ""))
+            logistics_col_1, logistics_col_2 = st.columns(2)
+            delivery_date = logistics_col_1.date_input("Step 3: Schedule Pickup Date Anchor")
+            delivery_time = logistics_col_2.time_input("Step 3.1: Select Fleet Scheduling Time Window")
+            logistics_address = st.text_input("Step 3.2: Logistic Route Destination Mapping", value=user_record.get("address", ""))
             
-            st.markdown(f"### Total Pipeline Cost Matrix Evaluation: <span style='color:#10b981;'>KES {total_cost}</span>", unsafe_allow_html=True)
-            p_gateway = st.selectbox("Step 4: Secure Transaction Gateway Routing Matrix", ["M-Pesa Express", "Secure Card Payment Gateway"])
+            st.markdown(f"### Total Pipeline Cost Matrix Evaluation: <span style='color:#10b981;'>KES {calculated_total_cost}</span>", unsafe_allow_html=True)
+            payment_method_gateway = st.selectbox("Step 4: Secure Transaction Gateway Routing Matrix", ["M-Pesa Express", "Secure Card Payment Gateway"])
             
             if st.button("💳 Proceed & Trigger Payment Engine Settlement", use_container_width=True):
-                if not p_addr:
+                if not logistics_address:
                     st.error("Route mapping field context validation required before checkout.")
                 else:
-                    tracking_code = "BIGZ-" + datetime.now().strftime("%H%M%S")
-                    new_order = {
-                        "tracking": tracking_code, "customer": user_record["name"], "email": user_email,
-                        "service": selected_s, "quantity": f"{qty} {matched_s['unit']}", "cost": total_cost,
-                        "pickup_logistics": f"{p_date} at {p_time}", "address": p_addr,
-                        "payment_gateway": f"{p_gateway} (Transaction Confirmed)", "status": "Pickup",
+                    unique_tracking_id = "BIGZ-" + datetime.now().strftime("%H%M%S")
+                    new_order_record = {
+                        "tracking": unique_tracking_id, "customer": user_record["name"], "email": active_email,
+                        "service": chosen_service_name, "quantity": f"{order_quantity} {service_profile['unit']}", "cost": calculated_total_cost,
+                        "pickup_logistics": f"{delivery_date} at {delivery_time}", "address": logistics_address,
+                        "payment_gateway": f"{payment_method_gateway} (Transaction Confirmed)", "status": "Pickup",
                         "assigned_staff": "Pending Scheduling Hub Allocation", "created_at": datetime.now().strftime("%m/%d/%y")
                     }
-                    st.session_state.orders.append(new_order)
+                    st.session_state.orders.append(new_order_record)
                     st.balloons()
-                    st.success(f"Processing Order Stream generated successfully! ID Token: {tracking_code}")
+                    st.success(f"Processing Order Stream generated successfully! ID Token: {unique_tracking_id}")
                     st.rerun()
 
         st.markdown("### Profile Manifest Active Tracking Vectors")
-        c_orders = [o for o in st.session_state.orders if o["email"] == user_email]
-        if not c_orders:
-            st.caption("No real-time tracking loops running currently on this account configuration.")
+        client_active_orders = [order for order in st.session_state.orders if order["email"] == active_email]
+        if not client_active_orders:
+            st.caption("No active tracking segments allocated currently under this consumer record profile context.")
         else:
-            col_grid = st.columns(4)
-            for idx, o in enumerate(c_orders):
-                target_col = col_grid[idx % 4]
-                with target_col:
+            tracking_grid_columns = st.columns(4)
+            for index, order in enumerate(client_active_orders):
+                grid_column_target = tracking_grid_columns[index % 4]
+                with grid_column_target:
                     st.markdown(f"""
                     <div style="background: white; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; color: black; margin-bottom: 15px;">
-                        <span style="float: right; font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 8px; font-weight: bold;">{o['status']}</span>
-                        <h4 style="margin: 0 0 5px 0; color: #1e3a8a;">{o['tracking']}</h4>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #475569;">Package: {o['service']}</p>
+                        <span style="float: right; font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 8px; font-weight: bold;">{order['status']}</span>
+                        <h4 style="margin: 0 0 5px 0; color: #1e3a8a;">{order['tracking']}</h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #475569;">Package: {order['service']}</p>
                     </div>
                     """, unsafe_allow_html=True)
 
     elif menu_selection == "My Profile Account":
         st.markdown("## 👤 Configuration Preferences & Profile Management")
-        col_p1, col_p2 = st.columns([1.1, 0.9], gap="large")
+        profile_edit_col, settings_wallet_col = st.columns([1.1, 0.9], gap="large")
         
-        with col_p1:
-            st.markdown("### Core Registration Storage Data")
+        with profile_edit_col:
+            st.markdown("### Core Registration Data Modification Registry")
             with st.form("profile_data_form"):
-                e_name = st.text_input("Profile Display Name Entity", value=user_record["name"])
-                e_phone = st.text_input("Active Communications Connection String", value=user_record["phone"])
-                e_addr = st.text_area("Default Operational Delivery Address Log", value=user_record.get("address", ""))
+                modified_name = st.text_input("Profile Display Name Entity", value=user_record["name"])
+                modified_phone = st.text_input("Active Communications Connection String", value=user_record["phone"])
+                modified_address = st.text_area("Default Operational Delivery Address Log", value=user_record.get("address", ""))
+                
                 if st.form_submit_button("Commit Account Database Mutation"):
-                    user_record["name"] = e_name
-                    user_record["phone"] = e_phone
-                    user_record["address"] = e_addr
-                    
-                    # Update configuration edits permanently to JSON file database
-                    save_user_to_db(user_email, user_record)
-                    st.success("Storage registers updated effectively across core systems database file.")
+                    user_record["name"] = modified_name
+                    user_record["phone"] = modified_phone
+                    user_record["address"] = modified_address
+                    # Permanent JSON record configuration update save execution
+                    save_user_profile(active_email, user_record)
+                    st.success("Storage registers updated effectively inside central database file.")
                     st.rerun()
 
-        with col_p2:
+        with settings_wallet_col:
             st.markdown("### Vault Storage Credit Methods Tokens")
-            for card in user_record.get("saved_cards", []):
+            for credit_card_mask in user_record.get("saved_cards", []):
                 st.markdown(f"""
                 <div style="background: linear-gradient(135deg, #0f172a, #1e3a8a); color: white; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
                     <p style="margin: 0; font-size: 10px; opacity: 0.7; letter-spacing: 1px;">BIGZ GATEWAY WALLET INTEGRATION</p>
-                    <h3 style="margin: 8px 0; letter-spacing: 3px;">{card}</h3>
+                    <h3 style="margin: 8px 0; letter-spacing: 3px;">{credit_card_mask}</h3>
                     <p style="margin: 0; font-size: 11px; text-align: right; opacity: 0.9;">SECURE SIGNATURE VERIFIED</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
             st.markdown("### System Formulation Metrics & Preferences")
-            p_det = st.selectbox("Default Detergent Type Formula Profile", ["Scented Organic", "Hypoallergenic Neutral", "Heavy Stain-Fighter Extra"])
-            p_starch = st.selectbox("Garment Stiffness Calibration Ratio", ["No Starch Treatment", "Medium Crispy Stiffness", "High Executive Starched Stiff"])
+            preferred_detergent = st.selectbox("Default Detergent Type Formula Profile", ["Scented Organic", "Hypoallergenic Neutral", "Heavy Stain-Fighter Extra"])
+            preferred_starch = st.selectbox("Garment Stiffness Calibration Ratio", ["No Starch Treatment", "Medium Crispy Stiffness", "High Executive Starched Stiff"])
             if st.button("Overwrite Custom Configuration Maps"):
-                user_record["preferences"]["Detergent type"] = p_det
-                user_record["preferences"]["Starched Shirts"] = p_starch
-                save_user_to_db(user_email, user_record) # Commit choices update to disk file
-                st.success("Preferences saved successfully.")
+                user_record["preferences"]["Detergent type"] = preferred_detergent
+                user_record["preferences"]["Starched Shirts"] = preferred_starch
+                save_user_profile(active_email, user_record)
+                st.success("Preferences synchronized permanently to backend database storage registries.")
 
-# =========================================
-# LAYER C: AUTHENTICATED ADMINISTRATIVE HUB
-# =========================================
-elif st.session_state.logged_in and user_role == "admin":
+# ==============================================================================
+# 8. AUTHORIZED LAYER C: ADMINISTRATIVE HUB CONTROL ENGINE
+# ==============================================================================
+elif st.session_state.logged_in and active_role == "admin":
     
     if menu_selection == "Main Operations Ledger":
-        st.markdown("## ⚙️ Administration Engine Real-Time Process Dashboard")
+        st.markdown("## ⚙️ Administration Engine Real-Time Process Control Dashboard")
         
         st.markdown("### 🔍 Enterprise Core System Service Tracking Pipeline")
         if not st.session_state.orders:
             st.info("System process logs contain zero running context objects currently.")
         else:
-            matrix_ledger = []
-            for idx, o in enumerate(st.session_state.orders):
-                matrix_ledger.append({
-                    "Index Pointer": idx,
-                    "Order ID Vector": o["tracking"],
-                    "Client Context": o["customer"],
-                    "Processing Lifecycle Stage": o["status"],
-                    "Deployed Fleet Asset": o["assigned_staff"],
-                    "System Timestamp": o["created_at"]
-                })
-            df_ledger = pd.DataFrame(matrix_ledger)
-            st.dataframe(df_ledger.drop(columns=["Index Pointer"]), use_container_width=True, hide_index=True)
+            matrix_ledger = [
+                {
+                    "Index Pointer": index,
+                    "Order ID Vector": entry["tracking"],
+                    "Client Context": entry["customer"],
+                    "Processing Lifecycle Stage": entry["status"],
+                    "Deployed Fleet Asset": entry["assigned_staff"],
+                    "System Timestamp": entry["created_at"]
+                } for index, entry in enumerate(st.session_state.orders)
+            ]
+            orders_dataframe = pd.DataFrame(matrix_ledger)
+            st.dataframe(orders_dataframe.drop(columns=["Index Pointer"]), use_container_width=True, hide_index=True)
             
             st.markdown("#### Production Workflow State Manipulation Unit")
-            col_a1, col_a2, col_a3 = st.columns(3)
-            with col_a1:
-                t_idx = st.selectbox("Select Target Pipeline Execution ID Context", options=df_ledger["Index Pointer"], format_func=lambda x: f"Order #{st.session_state.orders[x]['tracking']} [{st.session_state.orders[x]['customer']}]")
-            with col_a2:
-                t_stage = st.selectbox("Advance Flowchart Execution Phase", ["Pickup", "Washing", "Drying", "Fold", "Ready for Delivery", "Delivered & Complete"])
-            with col_a3:
-                t_staff = st.selectbox("Re-assign Operational Fleet Worker Unit", st.session_state.staff)
+            control_col_1, control_col_2, control_col_3 = st.columns(3)
+            with control_col_1:
+                target_order_index = st.selectbox(
+                    "Select Target Pipeline Execution ID Context", 
+                    options=orders_dataframe["Index Pointer"], 
+                    format_func=lambda x: f"Order #{st.session_state.orders[x]['tracking']} [{st.session_state.orders[x]['customer']}]"
+                )
+            with control_col_2:
+                updated_workflow_stage = st.selectbox(
+                    "Advance Flowchart Execution Phase", 
+                    ["Pickup", "Washing", "Drying", "Fold", "Ready for Delivery", "Delivered & Complete"]
+                )
+            with control_col_3:
+                allocated_staff_asset = st.selectbox("Re-assign Operational Fleet Worker Unit", st.session_state.staff_directory)
                 
             if st.button("Commit Production Modification Instructions Override", use_container_width=True):
-                st.session_state.orders[t_idx]["status"] = t_stage
-                st.session_state.orders[t_idx]["assigned_staff"] = t_staff
+                st.session_state.orders[target_order_index]["status"] = updated_workflow_stage
+                st.session_state.orders[target_order_index]["assigned_staff"] = allocated_staff_asset
                 
-                # Automated tracking message engine mock simulation
+                # Dynamic order update support system automated chat notification append
                 st.session_state.messages.append({
                     "name": "SYSTEM PRODUCTION AUTOMATION BOT",
-                    "message": f"Order Framework Context Update Notification [{st.session_state.orders[t_idx]['tracking']}]: Your package processing stage moved cleanly to '{t_stage}' under supervision of tracking courier asset: {t_staff}.",
+                    "message": f"Order Framework Context Update Notification [{st.session_state.orders[target_order_index]['tracking']}]: Package lifecycle status progressed to '{updated_workflow_stage}' under deployment tracker asset: {allocated_staff_asset}.",
                     "time": datetime.now().strftime("%H:%M:%S")
                 })
-                st.success("Target workflow state configurations adjusted in centralized operational logs.")
+                st.success("Target workflow state configuration adjustments updated across operations ledger logs.")
                 st.rerun()
 
         st.markdown("---")
         col_g1, col_g2 = st.columns(2)
         with col_g1:
             st.markdown("### Distribution Mapping Dispatch Vectors Matrix")
-            st.info("🌐 Core GPS Mapping Active. Routing links verified for 4 active logistical worker nodes.")
+            st.info("🌐 Core GPS Fleet Matrix Mapping Connection Layer Connected Nominally.")
             st.markdown("""
             <div style="background: white; padding: 18px; border-radius: 12px; color: black; border-left: 5px solid #a855f7;">
-                <b>Active Shift Route Dispatches Checklist:</b><br>
-                • Alex Chen — Route Segment Northwest Alpha (08:00 - 12:00)<br>
+                <b>Active Shift Route Log Tracking Checklist:</b><br>
+                • Alex Chen — Route Segment Northwest Alpha Operational Block (08:00 - 12:00)<br>
                 • Marix Mason — Route Segment Central Core Cargo Zone (13:00 - 17:00)
             </div>
             """, unsafe_allow_html=True)
             
         with col_g2:
-            st.markdown("### Expand Core Product Catalog Framework")
+            st.markdown("### Expand Core Product Catalog Framework Matrix")
             with st.form("catalog_append_form"):
-                a_name = st.text_input("New Core Service Label")
-                a_price = st.number_input("Rate Calculation Standard (KES)", min_value=10, value=150)
-                a_unit = st.selectbox("Unit Metric Scale", ["KG", "Piece", "Pair", "Suit"])
-                a_cat = st.selectbox("Pipeline System Assignment Type", ["Wash & Fold", "Dry Clean"])
+                append_catalog_name = st.text_input("New Core Service Label")
+                append_catalog_price = st.number_input("Rate Calculation Standard Asset Value (KES)", min_value=10, value=150)
+                append_catalog_unit = st.selectbox("Unit Metric Scale", ["KG", "Piece", "Pair", "Suit"])
+                append_catalog_category = st.selectbox("Pipeline System Assignment Type Context", ["Wash & Fold", "Dry Clean"])
+                
                 if st.form_submit_button("Append Service Package Vector To Core Arrays"):
-                    if a_name:
-                        services.append({"name": a_name, "price": a_price, "unit": a_unit, "type": a_cat})
-                        st.success(f"Production matrix catalog expanded: Added entry '{a_name}'")
+                    if append_catalog_name:
+                        LAUNDRY_SERVICE_CATALOG.append({
+                            "name": append_catalog_name, 
+                            "price": append_catalog_price, 
+                            "unit": append_catalog_unit, 
+                            "type": append_catalog_category
+                        })
+                        st.success(f"Production matrix catalog expanded: Added target row asset vector '{append_catalog_name}'")
                     else:
                         st.error("Operation validation aborted. Name parameters missing definitions.")
 
     elif menu_selection == "User Accounts Profiles":
-        st.markdown("## 👥 Active Database Consumers Master Profiles Register Ledger (Recalled From Persistent JSON)")
+        st.markdown("## 👥 Active Database Consumers Master Profiles Register Ledger (Recalled From JSON Database)")
         records_pool = []
-        for em, u in st.session_state.users.items():
-            if u["role"] == "customer":
+        for database_email, profile_node in st.session_state.users.items():
+            if profile_node["role"] == "customer":
                 records_pool.append({
-                    "Client Name Master Identifier": u["name"],
-                    "Mobile Link Address String": u["phone"],
-                    "Identity Clearance Allocation Key": em,
-                    "Security Verification Clearance Flags": "VERIFIED ACCESS ACTIVE" if u.get("verified", False) else "LOCKED LOOP PENDING"
+                    "Client Name Master Identifier": profile_node["name"],
+                    "Mobile Link Address String": profile_node["phone"],
+                    "Identity Clearance Allocation Key": database_email,
+                    "Security Verification Clearance Flags": "VERIFIED ACCESS ACTIVE" if profile_node.get("verified", False) else "LOCKED LOOP PENDING"
                 })
         if records_pool:
             st.table(pd.DataFrame(records_pool))
         else:
-            st.caption("No registered records located in database system arrays.")
+            st.caption("No registered records located inside user data arrays.")
 
     elif menu_selection == "Inventory & Billings":
         st.markdown("## 📊 Strategic Allocation Audits & Billing Balance Ledgers")
-        col_an1, col_an2 = st.columns(2)
+        inventory_graph_col, fiscal_card_col = st.columns(2)
         
-        with col_an1:
+        with inventory_graph_col:
             st.markdown("### Material Commodity Supply Reservoirs")
-            inv_df = pd.DataFrame.from_dict(st.session_state.inventory, orient='index', columns=['Current Resource Level'])
-            st.bar_chart(inv_df)
+            inventory_dataframe = pd.DataFrame.from_dict(st.session_state.inventory, orient='index', columns=['Current Resource Level'])
+            st.bar_chart(inventory_dataframe)
             
             st.markdown("#### Adjust Supply Levels")
-            for asset, quantity in st.session_state.inventory.items():
-                new_qty = st.number_input(f"Stock level: {asset}", min_value=0, value=int(quantity), key=f"inv_input_{asset}")
-                st.session_state.inventory[asset] = new_qty
+            for asset_key, quantity_value in st.session_state.inventory.items():
+                updated_inventory_quantity = st.number_input(f"Stock Level Reservoir Monitor: {asset_key}", min_value=0, value=int(quantity_value), key=f"inv_input_{asset_key}")
+                st.session_state.inventory[asset_key] = updated_inventory_quantity
             
-        with col_an2:
+        with fiscal_card_col:
             st.markdown("### Central Aggregated Accounting Audited Summaries")
-            gross_revenue = sum([o["cost"] for o in st.session_state.orders])
+            gross_system_revenue = sum([order_record["cost"] for order_record in st.session_state.orders])
             st.markdown(f"""
-            <div style="background: white; color: #0f172a; padding: 30px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="background: white; color: #0f172a; padding: 30px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #10b981;">
                 <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: bold; letter-spacing: 0.5px;">GROSS REVENUE FINANCIAL VALUE POOL</p>
-                <h1 style="margin: 10px 0 25px 0; color: #10b981; font-size: 42px; font-weight: 800;">KES {gross_revenue:,.2f}</h1>
+                <h1 style="margin: 10px 0 25px 0; color: #10b981; font-size: 42px; font-weight: 800;">KES {gross_system_revenue:,.2f}</h1>
                 <hr style="border-color: #f1f5f9; margin: 15px 0;">
                 <p style="font-size: 13px; margin: 6px 0;"><b>Secure Gateway Transaction Audits:</b> Systems Functioning Nominally</p>
                 <p style="font-size: 13px; margin: 6px 0;"><b>Outstanding Remittance Liabilities Queue:</b> KES 0.00 Cleared Balance</p>
             </div>
             """, unsafe_allow_html=True)
 
-# =========================================
-# UNIVERSAL LOGICAL COMPONENT: SUPPORT CORE CHAT
-# =========================================
+# ==============================================================================
+# 9. UNIVERSAL LOGICAL LINK: LIVE COMMUNICATIONS CENTRAL CHAT DECK ROUTER
+# ==============================================================================
 if st.session_state.logged_in:
-    if (user_role == "customer" and menu_selection == "Support Messaging Desk") or (user_role == "admin" and menu_selection == "Main Operations Ledger"):
+    show_chat_gate = False
+    if active_role == "customer" and menu_selection == "Support Messaging Desk":
+        show_chat_gate = True
+    elif active_role == "admin" and menu_selection == "Main Operations Ledger":
+        show_chat_gate = True
+        
+    if show_chat_gate:
         st.markdown("---")
         st.markdown("## 💬 Centralized Communications Network Support Routing Hub")
-        col_ch1, col_ch2 = st.columns([1, 2], gap="medium")
+        chat_input_column, chat_history_column = st.columns([1, 2], gap="medium")
         
-        with col_ch1:
-            c_msg = st.text_area("Compose System Operational Message Dispatch Package:", placeholder="Enter your inquiry or logging issue parameters here...")
+        with chat_input_column:
+            composed_message_text = st.text_area("Compose System Operational Message Dispatch Package:", placeholder="Enter your logging parameters here...")
             if st.button("Transmit Packet Matrix Payload To Central Queue", use_container_width=True):
-                if c_msg:
+                if composed_message_text:
                     st.session_state.messages.append({
                         "name": user_record["name"],
-                        "message": c_msg,
+                        "message": composed_message_text,
                         "time": datetime.now().strftime("%H:%M:%S")
                     })
-                    st.success("Data stream payload safely transmitted.")
+                    st.success("Data stream message matrix package successfully loaded into core stream channels.")
                     st.rerun()
                     
-        with col_ch2:
+        with chat_history_column:
             st.markdown("#### Message Streaming Framework Ledger Streams")
             if not st.session_state.messages:
-                st.caption("Active operational log chat channels contain zero traffic records.")
+                st.caption("Active operational chat communication channels contain zero data logs traffic objects.")
             else:
-                for msg in reversed(st.session_state.messages):
-                    st.info(f"🕒 [{msg['time']}] **{msg['name']}**: {msg['message']}")
+                for active_message in reversed(st.session_state.messages):
+                    st.info(f"🕒 [{active_message['time']}] **{active_message['name']}**: {active_message['message']}")
 
-# =========================================
-# SYSTEM CORE FOOTER
-# =========================================
+# ==============================================================================
+# 10. SYSTEM RUNTIME APP PLATFORM TERMINAL BASE FOOTER
+# ==============================================================================
 st.markdown("""
 <div class="footer">
-🧺 BIGZ CLEANERS <br>
-System Compliant Blueprint Core — Trusted Production Engine Framework Terminal <br><br>
-© 2026 BIGZ CLEANERS
+    🧺 BIGZ CLEANERS <br>
+    System Compliant Blueprint Core — Trusted Production Engine Unified Framework Terminal <br><br>
+    © 2026 BIGZ CLEANERS
 </div>
 """, unsafe_allow_html=True)
