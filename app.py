@@ -93,10 +93,54 @@ for state_key, default_value in state_defaults.items():
         st.session_state[state_key] = default_value
 
 # ==============================================================================
-# 4. GRAPHICAL UI ELEMENT CUSTOMIZATION (CSS)
+# 4. GRAPHICAL UI ELEMENT CUSTOMIZATION (CSS) WITH LOGO ANIMATION KEYS
 # ==============================================================================
 st.markdown(f"""
 <style>
+    @keyframes logoReveal {{
+        0% {{ transform: scale(0.3) rotate(-5deg); opacity: 0; filter: blur(10px); }}
+        50% {{ transform: scale(1.05) rotate(2deg); filter: blur(0px); }}
+        70% {{ transform: scale(0.98) rotate(-1deg); }}
+        100% {{ transform: scale(1) rotate(0deg); opacity: 1; }}
+    }}
+    @keyframes bubblePulse {{
+        0%, 100% {{ transform: translateY(0px); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }}
+        50% {{ transform: translateY(-8px); box-shadow: 0 10px 30px rgba(2, 132, 199, 0.6); }}
+    }}
+    .animated-logo-container {{
+        text-align: center;
+        padding: 30px 10px;
+        animation: logoReveal 1.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }}
+    .animated-logo-icon {{
+        font-size: 64px;
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 110px;
+        height: 110px;
+        line-height: 110px;
+        text-align: center;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        animation: bubblePulse 3s ease-in-out infinite;
+    }}
+    .animated-logo-text {{
+        color: white;
+        font-size: 38px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        margin-top: 15px;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 20px rgba(37, 99, 235, 0.5);
+    }}
+    .animated-logo-tagline {{
+        color: #93c5fd;
+        font-size: 14px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-top: 5px;
+        font-weight: 600;
+        opacity: 0.85;
+    }}
     .stApp {{
         background: linear-gradient(135deg, #020617, #0f172a, #1e3a8a, #0284c7);
         background-attachment: fixed;
@@ -144,16 +188,6 @@ st.markdown(f"""
         padding: 16px;
         border: 1px solid #f1f5f9;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }}
-    .action-btn {{
-        background-color: #eff6ff;
-        color: #1d4ed8;
-        border-radius: 16px;
-        padding: 12px;
-        text-align: center;
-        font-size: 13px;
-        font-weight: 500;
-        border: none;
     }}
     .data-card {{
         background-color: white;
@@ -208,6 +242,20 @@ st.markdown(f"""
         text-align: center; font-weight: bold; font-size: 16px;
         border-radius: 8px; margin-bottom: 20px;
     }}
+    .dashboard-container {{
+        background-color: #f1f5f9; border-radius: 12px; padding: 20px; color: #1e293b; margin-bottom: 25px;
+    }}
+    .dashboard-header {{
+        color: #1e3a8a; font-weight: 700; margin: 0 0 15px 0; font-size: 1.25rem; border-bottom: 2px solid #cbd5e1; padding-bottom: 5px;
+    }}
+    .calc-box {{
+        background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-left: 5px solid #0284c7;
+    }}
+    .tracker-card {{
+        background: white; padding: 15px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 15px;
+    }}
+    .status-node-active {{ color: #10b981; font-weight: bold; }}
+    .status-node-pending {{ color: #94a3b8; }}
     .footer {{ text-align: center; color: #94a3b8; padding: 40px 0; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); }}
 </style>
 """, unsafe_allow_html=True)
@@ -251,48 +299,34 @@ if st.session_state.logged_in:
         st.rerun()
 
 # ==============================================================================
-# 6. PUBLIC LANDING ARCHITECTURE
+# 6. PUBLIC LANDING ARCHITECTURE WITH AUTH ENHANCEMENTS & ANIMATION
 # ==============================================================================
 if not st.session_state.logged_in:
     hero_column, authorization_portal_column = st.columns([1.1, 0.9], gap="large")
     
     with hero_column:
+        # High-performance CSS keyframe logo intro component
         st.markdown("""
-        <div style="padding: 10px 0;">
-            <h1 style="color: white; font-size: 46px; font-weight: 800; line-height: 1.2; margin-bottom: 15px;">
-                PROFESSIONAL LAUNDRY,<br>MADE EASY FOR YOU &<br>YOUR BUSINESS.
-            </h1>
-            <p style="color: #cbd5e1; font-size: 18px; margin-bottom: 35px;">
-                Track Orders, Manage Accounts, and Experience Convenience - All in One Unified Architecture.
-            </p>
+        <div class="animated-logo-container">
+            <div class="animated-logo-icon">🧺</div>
+            <div class="animated-logo-text">BIGZ CLEANERS</div>
+            <div class="animated-logo-tagline">Premium Laundry Care</div>
         </div>
         """, unsafe_allow_html=True)
         
-        feature_one_col, feature_two_col = st.columns(2)
-        with feature_one_col:
-            st.markdown(f"""
-            <div style="background: white; padding: 22px; border-radius: 16px; min-height: 180px; color: #0f172a; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);">
-                <span style="font-size: 32px;">📥</span>
-                <h4 style="margin-top: 10px; font-weight: 700; color: {APP_THEME_COLOR_PRIMARY}; margin-bottom: 5px;">FOR CLIENTS:</h4>
-                <p style="font-size: 13px; color: #475569; line-height: 1.4; margin: 0;">
-                    Schedule Pickups, Track Your Wash Status, and Manage Payments effortlessly.
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with feature_two_col:
-            st.markdown("""
-            <div style="background: white; padding: 22px; border-radius: 16px; min-height: 180px; color: #0f172a; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);">
-                <span style="font-size: 32px;">📊</span>
-                <h4 style="margin-top: 10px; font-weight: 700; color: #581c87; margin-bottom: 5px;">FOR ADMINS & STAFF:</h4>
-                <p style="font-size: 13px; color: #475569; line-height: 1.4; margin: 0;">
-                    Streamline Operations, Assign Staff/Routes, and Monitor Resource Reserves.
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+        st.markdown("""
+        <div style="padding: 10px 0; text-align: center;">
+            <h2 style="color: white; font-size: 32px; font-weight: 800; line-height: 1.2; margin-bottom: 15px;">
+                PROFESSIONAL LAUNDRY,<br>MADE EASY FOR YOU.
+            </h2>
+            <p style="color: #cbd5e1; font-size: 16px; margin-bottom: 35px;">
+                Schedule Pickups, Track Your Wash Status, and Manage Preferences effortlessly.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
     with authorization_portal_column:
-        st.markdown("<div style='text-align: center; margin-bottom: 20px;'><h2 style='color: white; font-weight: 700;'>GET STARTED OR LOG IN</h2></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; margin-bottom: 20px;'><h3 style='color: white; font-weight: 700;'>GET STARTED OR LOG IN</h3></div>", unsafe_allow_html=True)
         
         if st.session_state.pending_verification:
             st.markdown(f"""
@@ -325,7 +359,6 @@ if not st.session_state.logged_in:
                         st.error("Invalid credentials.")
                             
             with signup_tab:
-                selected_role_type = st.selectbox("Assign Profile Blueprint Type:", ["Client / Consumer Account", "Admin / Production Staff"])
                 with st.form("signup_panel_form"):
                     signup_name = st.text_input("Full Signature Name")
                     signup_phone = st.text_input("Phone Communication Line")
@@ -334,21 +367,19 @@ if not st.session_state.logged_in:
                     signup_password = st.text_input("Set Custom Access Password", type="password")
                     if st.form_submit_button("SUBMIT APPLICATION FILES", use_container_width=True):
                         clean_email = signup_email_raw.lower().strip()
-                        assigned_role = "customer" if "Client" in selected_role_type else "admin"
                         new_profile = {
                             "name": signup_name, "phone": signup_phone, "address": signup_address,
-                            "password": signup_password, "role": assigned_role, "verified": (assigned_role == "admin"),
+                            "password": signup_password, "role": "customer", "verified": False,
                             "wallet_points": 0, "saved_cards": ["•••• •••• •••• 1111"],
                             "subscription": "None", "subscription_status": "Inactive",
                             "preferences": {"Detergent": "Scented Organic Premium", "Water Temp": "Cold Wash Mode", "Folding Style": "Classic Shelf Fold", "Starch Level": "No Starch Treatment"}
                         }
                         save_user_profile(clean_email, new_profile)
-                        if assigned_role == "customer":
-                            st.session_state.pending_verification = clean_email
+                        st.session_state.pending_verification = clean_email
                         st.rerun()
 
 # ==============================================================================
-# 7. CLIENT DASHBOARD & PROFILE VIEW (UPGRADED CONVERSION SUITE)
+# 7. CLIENT DASHBOARD & PROFILE VIEW 
 # ==============================================================================
 elif st.session_state.logged_in and active_role == "customer":
     st.markdown("""<div class="sticky-booking-banner">⚡ Need a 60-Second Pickup? Use the High-Conversion Booking Engine panel below for instant pickup scheduling!</div>""", unsafe_allow_html=True)
@@ -457,12 +488,11 @@ elif st.session_state.logged_in and active_role == "customer":
                 st.info(f"👤 **{msg['sender_name']}** [{msg['time']}]: {msg['message']}")
 
 # ==============================================================================
-# 8. AUTHORIZED LAYER C: MASTER ADMINISTRATIVE HUB VIEW (REACT DESIGN IMPLEMENTED)
+# 8. AUTHORIZED LAYER C: MASTER ADMINISTRATIVE HUB VIEW (MOBILE-FIRST REACT ENGINE)
 # ==============================================================================
 elif st.session_state.logged_in and active_role == "admin":
     
     if menu_selection == "Dashboard View":
-        # Centered frame container mapping cleanly to the mobile view layout specification
         st.markdown('<div class="mobile-frame">', unsafe_allow_html=True)
         
         # --- HEADER BLOCK ---
@@ -539,7 +569,7 @@ elif st.session_state.logged_in and active_role == "admin":
             </div>
             """, unsafe_allow_html=True)
 
-        # --- RIDER TRACKING (NAKURU / NJORO) ---
+        # --- RIDER TRACKING ---
         st.markdown("<div style='padding: 16px;'><h2 style='font-size: 18px; font-weight: bold; margin-bottom:10px;'>Delivery Riders</h2></div>", unsafe_allow_html=True)
         for rider in st.session_state.delivery_riders:
             st.markdown(f"""
@@ -573,7 +603,7 @@ elif st.session_state.logged_in and active_role == "admin":
             </div>
             """, unsafe_allow_html=True)
 
-        # --- WEEKLY ANALYTICS SUMMARY BOX ---
+        # --- WEEKLY ANALYTICS ---
         st.markdown("""
         <div style="padding: 16px;">
             <div class="analytics-gradient">
@@ -595,7 +625,7 @@ elif st.session_state.logged_in and active_role == "admin":
         </div>
         """, unsafe_allow_html=True)
 
-        # --- BOTTOM FIXED BAR SIMULATION ---
+        # --- BOTTOM FIXED BAR ---
         st.markdown("""
         <div class="bottom-nav">
             <span style="color: #2563eb; font-weight: bold; font-size: 14px;">🏠 Home</span>
@@ -608,9 +638,32 @@ elif st.session_state.logged_in and active_role == "admin":
         st.markdown('</div>', unsafe_allow_html=True)
 
     elif menu_selection == "Live Ledger Matrix Database":
-        st.markdown("## 📊 Active Operational Pipeline Database Engine")
+        st.markdown("## 📊 Operational Pipeline Database Engine")
         
-        # Allow admins to seamlessly modify operational parameters
+        # --- EXCLUSIVE ADMIN PROMOTION PANEL ---
+        st.markdown("### 🔑 Administrator Role Delegation Panel")
+        st.caption("Promote any existing registered user account instantly to full system administrator privileges.")
+        
+        customer_accounts = [email for email, profile in st.session_state.users.items() if profile["role"] == "customer"]
+        
+        if not customer_accounts:
+            st.info("No registered customer profiles are currently available for role elevation workflows.")
+        else:
+            col_target, col_action = st.columns([2, 1])
+            with col_target:
+                selected_user_email = st.selectbox("Select Account for Escalation", options=customer_accounts, format_func=lambda e: f"{st.session_state.users[e]['name']} ({e})")
+            with col_action:
+                st.markdown("<div style='padding-top:28px;'></div>", unsafe_allow_html=True)
+                if st.button("🚀 Grant Administrative Clearance", use_container_width=True):
+                    st.session_state.users[selected_user_email]["role"] = "admin"
+                    st.session_state.users[selected_user_email]["verified"] = True
+                    save_user_profile(selected_user_email, st.session_state.users[selected_user_email])
+                    st.success(f"Security clearance confirmed: {selected_user_email} is now an Admin.")
+                    st.rerun()
+                    
+        st.markdown("---")
+        
+        # --- ORDER WORKFLOW CONTROL LEDGER ---
         if st.session_state.orders:
             matrix_ledger = [
                 {"Order Unique Token": entry["tracking"], "Client": entry["customer"], "Service Model": entry["service"], "Billing Status": entry["payment_gateway"], "Workflow Stage": entry["status"], "Rider Assigned": entry["assigned_staff"], "Index": index}
