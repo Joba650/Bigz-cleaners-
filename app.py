@@ -42,17 +42,9 @@ if "user_session" not in st.session_state:
 # ==========================================
 # 1. DESIGN SPECIFICATION: CORPORATE UI THEMING
 # ==========================================
-st.markdown("""
-    <style>
-        .main-header {text-align: center; color: #1E3A8A; font-family: 'Helvetica Neue', sans-serif; font-weight: 800; margin-bottom: 0px;}
-        .sub-header {text-align: center; color: #4B5563; font-size: 16px; margin-bottom: 30px;}
-        .card-container {background-color: #F3F4F6; padding: 20px; border-radius: 15px; border-left: 5px solid #10B981; margin-bottom: 15px;}
-        .metric-card {background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); padding: 20px; border-radius: 12px; color: white; text-align: center;}
-    </style>
-""", unsafe_with_html=True)
-
-st.markdown("<h1 class='main-header'>🧺 BIGZ CLEANERS ENTERPRISE</h1>", unsafe_with_html=True)
-st.markdown("<p class='sub-header'>Integrated Multi-Tenant Logistics & Textile Care Platform</p>", unsafe_with_html=True)
+# Clean HTML injections to prevent style block formatting TypeErrors
+st.markdown("<h1 style='text-align: center; color: #1E3A8A; font-family: sans-serif; font-weight: 800; margin-bottom: 0px;'>🧺 BIGZ CLEANERS ENTERPRISE</h1>", unsafe_with_html=True)
+st.markdown("<p style='text-align: center; color: #4B5563; font-size: 16px; margin-bottom: 30px;'>Integrated Multi-Tenant Logistics & Textile Care Platform</p>", unsafe_with_html=True)
 
 # ==========================================
 # 2. GLOBAL ROLE-BASED ACCESS CONTROLLER
@@ -160,32 +152,30 @@ else:
             if not cust_orders:
                 st.info("Zero active system logs identified for current anchor context.")
             for o in cust_orders:
-                with st.container():
-                    st.markdown("<div class='card-container'>", unsafe_with_html=True)
-                    st.markdown(f"#### **Tracking Identifier: {o['Order ID']}**")
-                    
-                    # Live Visual Tracking Roadmap Indicator
-                    status_map = ["Pickup Requested", "Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"]
-                    curr_idx = status_map.index(o["Status"])
-                    
-                    progress_bar_val = (curr_idx + 1) / len(status_map)
-                    st.progress(progress_bar_val)
-                    
-                    tracker_line = ""
-                    for idx, step in enumerate(status_map):
-                        if idx < curr_idx: tracker_line += f"~~{step}~~ → "
-                        elif idx == curr_idx: tracker_line += f"**{step} 🚚** → "
-                        else: tracker_line += f"{step} → "
-                    st.markdown(tracker_line.rstrip(" → "))
-                    
-                    st.markdown(f"Financial Valuation: **KES {o['Cost']}** | Logged Delivery Point: *{o['Location']}*")
-                    st.markdown("</div>", unsafe_with_html=True)
+                st.markdown(f"#### **Tracking Identifier: {o['Order ID']}**")
+                
+                # Live Visual Tracking Roadmap Indicator
+                status_map = ["Pickup Requested", "Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"]
+                curr_idx = status_map.index(o["Status"])
+                
+                progress_bar_val = (curr_idx + 1) / len(status_map)
+                st.progress(progress_bar_val)
+                
+                tracker_line = ""
+                for idx, step in enumerate(status_map):
+                    if idx < curr_idx: tracker_line += f"~~{step}~~ → "
+                    elif idx == curr_idx: tracker_line += f"**{step} 🚚** → "
+                    else: tracker_line += f"{step} → "
+                st.markdown(tracker_line.rstrip(" → "))
+                
+                st.markdown(f"Financial Valuation: **KES {o['Cost']}** | Logged Delivery Point: *{o['Location']}*")
+                st.divider()
 
     # ------------------------------------------
     # ARCHITECTURE CONTEXT B: COURIER RIDER PANEL
     # ------------------------------------------
     elif session["role"] == "Rider":
-        st.markdown("### 🏍️ Assigned Logistics Routing Manifest")
+        st.markdown("### 💼 Assigned Logistics Routing Manifest")
         rider_jobs = [o for o in st.session_state.mock_db_orders if o["Rider"] == session["tag"]]
         unassigned_jobs = [o for o in st.session_state.mock_db_orders if o["Rider"] == "None"]
         
@@ -195,14 +185,14 @@ else:
             if not rider_jobs:
                 st.info("Zero logistics lines locked to your tracking identifier profile currently.")
             for o in rider_jobs:
-                with st.container():
-                    st.markdown("### Job " + o["Order ID"])
-                    st.write(f"🗺️ Destination: {o['Location']} | Financials: KES {o['Cost']}")
-                    new_stat = st.selectbox("Modify Execution Node Node Vector Status", ["Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"], key=o["Order ID"])
-                    if st.button("Update Ledger Link", key="btn_"+o["Order ID"]):
-                        o["Status"] = new_stat
-                        st.success("Logistics database tracking line synchronized.")
-                        st.rerun()
+                st.markdown(f"### Job {o['Order ID']}")
+                st.write(f"🗺️ Destination: {o['Location']} | Financials: KES {o['Cost']}")
+                new_stat = st.selectbox("Modify Execution Node Node Vector Status", ["Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"], key=o["Order ID"])
+                if st.button("Update Ledger Link", key="btn_"+o["Order ID"]):
+                    o["Status"] = new_stat
+                    st.success("Logistics database tracking line synchronized.")
+                    st.rerun()
+                st.divider()
                         
         with r_tab2:
             if not unassigned_jobs:
@@ -228,12 +218,9 @@ else:
             total_jobs = len(df_all)
             
             col_m1, col_m2, col_m3 = st.columns(3)
-            with col_m1:
-                st.markdown(f"<div class='metric-card'><h3>Gross Processing Invoices</h3><h2>KES {total_rev:,}</h2></div>", unsafe_with_html=True)
-            with col_m2:
-                st.markdown(f"<div class='metric-card'><h3>Pipeline Log Count</h3><h2>{total_jobs} Requests</h2></div>", unsafe_with_html=True)
-            with col_m3:
-                st.markdown(f"<div class='metric-card'><h3>Active Working Footprint</h3><h2>{len(st.session_state.mock_db_users)} Users</h2></div>", unsafe_with_html=True)
+            col_m1.metric("Gross Invoices", f"KES {total_rev:,}")
+            col_m2.metric("Pipeline Log Count", f"{total_jobs} Requests")
+            col_m3.metric("Active System Footprint", f"{len(st.session_state.mock_db_users)} Users")
                 
             st.divider()
             
