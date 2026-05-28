@@ -49,32 +49,47 @@ st.divider()
 # 2. GLOBAL ROLE-BASED ACCESS CONTROLLER
 # ==========================================
 if not st.session_state.user_session:
-    login_card, register_card = st.tabs(["🔒 Secure Portal Login", "📝 Create Account & Password"])
+    login_card, register_card = st.tabs(["🔒 Secure Portal Login", "📝 Create Account"])
     
     with register_card:
-        st.write("### New Client Registration")
-        reg_name = st.text_input("Full Official Name", key="reg_name")
-        reg_phone = st.text_input("Mobile Number (M-Pesa Profile)", key="reg_phone")
+        st.write("### New Client Registration Matrix")
         
-        # New Feature: Let client set their custom access password
-        reg_pass = st.text_input("Create Your Account Password", type="password", key="reg_pass", help="This password will be used to log in along with your unique Tag.")
+        # 1. Name Input
+        reg_name = st.text_input("1. Full Official Name", key="reg_name")
         
-        if st.button("Register & Activate Account", use_container_width=True):
-            if reg_name and reg_phone and reg_pass:
-                # Generate unique tracking tag format
-                generated_tag = f"JL-{random.randint(100000, 999999)}"
-                
-                # Save data safely into memory profiles
-                st.session_state.mock_db_users[generated_tag] = {
+        # 4. Unique Tracking Tag Custom Input
+        custom_tag_raw = st.text_input("2. Create Your Unique Tracking Tag (Numbers or Name)", key="custom_tag_input", help="Examples: 777777, SAMMY, KEVIN. The system automatically adds 'JL-' before it.")
+        
+        # 2 & 3. Password and Password Confirmation Fields
+        reg_pass = st.text_input("3. Create Account Password", type="password", key="reg_pass")
+        reg_pass_conf = st.text_input("4. Confirm Account Password", type="password", key="reg_pass_conf")
+        
+        if st.button("Register & Verify Account Entry", use_container_width=True):
+            # Clean up the custom tracking tag formatting
+            clean_tag_body = custom_tag_raw.strip().upper().replace("JL-", "")
+            final_generated_tag = f"JL-{clean_tag_body}"
+            
+            # Validation Checks
+            if not reg_name:
+                st.error("Registration Halted: Full Official Name is required.")
+            elif not custom_tag_raw:
+                st.error("Registration Halted: You must choose a Unique Tracking Tag identifier.")
+            elif final_generated_tag in st.session_state.mock_db_users:
+                st.error(f"Registration Halted: The tracking tag **{final_generated_tag}** is already taken by someone else. Please try a different number or name combination!")
+            elif not reg_pass:
+                st.error("Registration Halted: Password cannot be left blank.")
+            elif reg_pass != reg_pass_conf:
+                st.error("Registration Halted: Password fields do not match! Please check your spelling carefully.")
+            else:
+                # Successfully enter them directly into the system database memory
+                st.session_state.mock_db_users[final_generated_tag] = {
                     "name": reg_name, 
                     "role": "Customer", 
                     "pass": reg_pass
                 }
                 st.balloons()
-                st.success(f"🎉 Account Created! Your Unique Login Tag is: **{generated_tag}**")
-                st.info(f"Please switch to the 'Secure Portal Login' tab and log in using **Tag: {generated_tag}** and your chosen password.")
-            else:
-                st.error("All registration fields, including the password, must be filled out.")
+                st.success(f"🎉 Account successfully saved to system! Your login Tag is: **{final_generated_tag}**")
+                st.info(f"Switch over to the 'Secure Portal Login' tab and enter **Tag: {final_generated_tag}** and your password to access your dashboard.")
 
     with login_card:
         st.write("### Secure Portal Handshake")
@@ -82,9 +97,8 @@ if not st.session_state.user_session:
         input_pass = st.text_input("Enter Your Account Password", type="password")
         
         if st.button("Authorize Connection", use_container_width=True):
-            # 1. Check if user exists in our profiles list
+            # Verify details against system profiles records
             if input_tag in st.session_state.mock_db_users:
-                # 2. Verify if the entered password matches the stored password
                 if st.session_state.mock_db_users[input_tag]["pass"] == input_pass:
                     user_data = st.session_state.mock_db_users[input_tag]
                     st.session_state.user_session = {"tag": input_tag, "name": user_data["name"], "role": user_data["role"]}
