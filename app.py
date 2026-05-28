@@ -21,7 +21,7 @@ if "current_rates" not in st.session_state:
         "duvet_rate": 500
     }
 
-# Simulate Persistent Database Tier
+# Simulate Persistent Database Tier (Stores Tracking Tags & Custom Passwords)
 if "mock_db_users" not in st.session_state:
     st.session_state.mock_db_users = {
         "JL-111111": {"name": "Admin Chief", "role": "Admin", "pass": "admin123"},
@@ -39,7 +39,7 @@ if "user_session" not in st.session_state:
     st.session_state.user_session = None
 
 # ==========================================
-# 1. DESIGN SPECIFICATION: SAFE TYPOGRAPHY
+# 1. DESIGN SPECIFICATION
 # ==========================================
 st.title("BIGZ CLEANERS ENTERPRISE")
 st.subheader("Integrated Multi-Tenant Logistics & Textile Care Platform")
@@ -49,37 +49,51 @@ st.divider()
 # 2. GLOBAL ROLE-BASED ACCESS CONTROLLER
 # ==========================================
 if not st.session_state.user_session:
-    login_card, register_card = st.tabs(["Secure Corporate Portal Access", "Establish New Enterprise Account"])
+    login_card, register_card = st.tabs(["🔒 Secure Portal Login", "📝 Create Account & Password"])
     
     with register_card:
-        st.write("### Client Onboarding Workspace")
-        reg_name = st.text_input("Full Official Registration Name")
-        reg_phone = st.text_input("Mobile Routing Terminal Number (M-Pesa Vector)")
-        reg_pass = st.text_input("Set Structural Access Phrase", type="password")
+        st.write("### New Client Registration")
+        reg_name = st.text_input("Full Official Name", key="reg_name")
+        reg_phone = st.text_input("Mobile Number (M-Pesa Profile)", key="reg_phone")
         
-        if st.button("Provisional Account Activation", use_container_width=True):
+        # New Feature: Let client set their custom access password
+        reg_pass = st.text_input("Create Your Account Password", type="password", key="reg_pass", help="This password will be used to log in along with your unique Tag.")
+        
+        if st.button("Register & Activate Account", use_container_width=True):
             if reg_name and reg_phone and reg_pass:
+                # Generate unique tracking tag format
                 generated_tag = f"JL-{random.randint(100000, 999999)}"
-                st.session_state.mock_db_users[generated_tag] = {"name": reg_name, "role": "Customer", "pass": reg_pass}
+                
+                # Save data safely into memory profiles
+                st.session_state.mock_db_users[generated_tag] = {
+                    "name": reg_name, 
+                    "role": "Customer", 
+                    "pass": reg_pass
+                }
                 st.balloons()
-                st.success(f"Account Initialized! System Tracking Tag Assigned: {generated_tag}")
-                st.info("Log in using this structural tracking tag on the adjacent panel.")
+                st.success(f"🎉 Account Created! Your Unique Login Tag is: **{generated_tag}**")
+                st.info(f"Please switch to the 'Secure Portal Login' tab and log in using **Tag: {generated_tag}** and your chosen password.")
             else:
-                st.error("Operation halted: All authentication structures must be specified.")
+                st.error("All registration fields, including the password, must be filled out.")
 
     with login_card:
-        st.write("### System Credentials Handshake")
-        input_tag = st.text_input("Enter Structural Tracking Tag (e.g., JL-XXXXXX)").strip().upper()
-        input_pass = st.text_input("System Entry Security Key", type="password")
+        st.write("### Secure Portal Handshake")
+        input_tag = st.text_input("Enter Your Unique Tracking Tag (e.g., JL-XXXXXX)").strip().upper()
+        input_pass = st.text_input("Enter Your Account Password", type="password")
         
-        if st.button("Authorize Core Connectivity", use_container_width=True):
-            if input_tag in st.session_state.mock_db_users and st.session_state.mock_db_users[input_tag]["pass"] == input_pass:
-                user_data = st.session_state.mock_db_users[input_tag]
-                st.session_state.user_session = {"tag": input_tag, "name": user_data["name"], "role": user_data["role"]}
-                st.toast(f"Session established for profile: {user_data['name']}")
-                st.rerun()
+        if st.button("Authorize Connection", use_container_width=True):
+            # 1. Check if user exists in our profiles list
+            if input_tag in st.session_state.mock_db_users:
+                # 2. Verify if the entered password matches the stored password
+                if st.session_state.mock_db_users[input_tag]["pass"] == input_pass:
+                    user_data = st.session_state.mock_db_users[input_tag]
+                    st.session_state.user_session = {"tag": input_tag, "name": user_data["name"], "role": user_data["role"]}
+                    st.toast(f"Welcome back, {user_data['name']}!")
+                    st.rerun()
+                else:
+                    st.error("Authentication failed: Incorrect password string.")
             else:
-                st.error("Authentication handshake failed: Security metrics mismatch.")
+                st.error("Authentication failed: Unique tracking tag not found.")
 
 # ==========================================
 # 3. INTERFACE DEPENDENCY: ROUTING SEPARATION
@@ -156,8 +170,7 @@ else:
                 status_map = ["Pickup Requested", "Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"]
                 curr_idx = status_map.index(o["Status"])
                 
-                progress_bar_val = (curr_idx + 1) / len(status_map)
-                st.progress(progress_bar_val)
+                st.progress((curr_idx + 1) / len(status_map))
                 
                 tracker_line = ""
                 for idx, step in enumerate(status_map):
