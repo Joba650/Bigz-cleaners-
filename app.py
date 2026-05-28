@@ -10,7 +10,7 @@ import streamlit as st
 DATABASE_FILE_PATH = "users_db.json"
 
 st.set_page_config(
-    page_title="BIGZ CLEANERS AI",
+    page_title="BIGZ CLEANERS",
     page_icon="🧺",
     layout="wide"
 )
@@ -190,7 +190,7 @@ if st.session_state.logged_in:
     if st.session_state.current_role == "customer":
         menu = st.sidebar.radio("Navigation Menu", ["Client Dashboard", "My Profile Settings"])
     else:
-        menu = st.sidebar.radio("Admin Menu", ["Operations Dashboard", "System Database Ledger"])
+        menu = st.sidebar.radio("Admin Menu", ["Admin Dashboard Hub", "System Database Ledger"])
 
     st.sidebar.markdown("<br><br>", unsafe_allow_html=True)
     if st.sidebar.button("🚪 Terminate Session", use_container_width=True):
@@ -203,14 +203,14 @@ if st.session_state.logged_in:
 if not st.session_state.logged_in:
     c1, c2 = st.columns([1.2, 0.8])
     with c1:
-        st.markdown("<h1 style='color: white; font-size: 48px; margin-top: 50px;'>BIGZ CLEANERS AI</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='color: white; font-size: 48px; margin-top: 50px;'>BIGZ CLEANERS</h1>", unsafe_allow_html=True)
         st.markdown("<p style='color: #cbd5e1; font-size: 18px;'>High-Performance Automated Fabric Care Infrastructure Engine.</p>", unsafe_allow_html=True)
     with c2:
         st.markdown("<div style='padding-top: 50px;'></div>", unsafe_allow_html=True)
         with st.form("login_form"):
             st.markdown("### Secure Gateway Login")
-            email_input = st.text_input("Account Email", value="sarachen@gmail.com")
-            pass_input = st.text_input("Password", type="password", value="password123")
+            email_input = st.text_input("Account Email", value="admin@bigz.com")
+            pass_input = st.text_input("Password", type="password", value="admin123")
             if st.form_submit_button("Authenticate"):
                 clean_email = email_input.lower().strip()
                 if clean_email in st.session_state.users and st.session_state.users[clean_email]["password"] == pass_input:
@@ -223,7 +223,7 @@ if not st.session_state.logged_in:
                     st.error("Invalid secure matching credentials.")
 
 # ==============================================================================
-# 7. CLIENT INTERFACES (MATCHING THE MOCKUPS EXACTLY)
+# 7. CLIENT INTERFACES 
 # ==============================================================================
 elif st.session_state.logged_in and st.session_state.current_role == "customer":
 
@@ -233,14 +233,12 @@ elif st.session_state.logged_in and st.session_state.current_role == "customer":
         col_main, col_side = st.columns([2, 1], gap="medium")
         
         with col_main:
-            # Quick Schedule Block matching Mockup #1
             st.markdown("""
             <div class="dashboard-container">
                 <h3 class="dashboard-header">📅 Quick Schedule Service Pipeline</h3>
             </div>
             """, unsafe_allow_html=True)
             
-            # Tap catalog interface
             st.markdown("##### 1. Select Active Service Layer Category")
             catalog_cols = st.columns(3)
             for idx, srv in enumerate(st.session_state.laundry_service_catalog):
@@ -262,7 +260,6 @@ elif st.session_state.logged_in and st.session_state.current_role == "customer":
 
             active_srv = next(s for s in st.session_state.laundry_service_catalog if s["id"] == st.session_state.selected_service_id)
             
-            # Booking Form
             with st.form("quick_schedule_form"):
                 st.markdown(f"**Booking Parameters for: {active_srv['name']}**")
                 c_f1, c_f2 = st.columns(2)
@@ -285,7 +282,6 @@ elif st.session_state.logged_in and st.session_state.current_role == "customer":
                     st.rerun()
 
         with col_side:
-            # Active Orders Block matching Mockup #1
             st.markdown("""
             <div class="dashboard-container">
                 <h3 class="dashboard-header">📦 Active Orders</h3>
@@ -354,8 +350,8 @@ elif st.session_state.logged_in and st.session_state.current_role == "customer":
 # ==============================================================================
 elif st.session_state.logged_in and st.session_state.current_role == "admin":
     
-    if menu == "Operations Dashboard":
-        st.markdown("<h1 style='color: white;'>Administrative Operations Command Terminal</h1>", unsafe_allow_html=True)
+    if menu == "Admin Dashboard Hub":
+        st.markdown("<h1 style='color: white;'>Admin Dashboard Hub Control Command Terminal</h1>", unsafe_allow_html=True)
         
         col_mock, col_charts = st.columns([1.1, 1.9], gap="large")
         
@@ -448,7 +444,7 @@ elif st.session_state.logged_in and st.session_state.current_role == "admin":
 # ==============================================================================
 st.markdown("""
 <div class="footer">
-    🧺 BIGZ CLEANERS AI LABS <br>
+    🧺 BIGZ CLEANERS LABS <br>
     System Compliant Blueprint Core — Production Secure Operational Layer <br>
     © 2026 BIGZ CLEANERS
 </div>
