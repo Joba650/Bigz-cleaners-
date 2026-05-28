@@ -13,17 +13,20 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Initialize live pricing matrix in system memory
+# Initialize expanded live pricing matrix in system memory
 if "current_rates" not in st.session_state:
     st.session_state.current_rates = {
         "clothes_rate": 200,
+        "pressing_rate": 100,
+        "duvet_rate": 500,
         "carpet_rate": 150,
-        "duvet_rate": 500
+        "sneaker_rate": 300,
+        "leather_rate": 800
     }
 
-# Track the sequential order counter to ensure systematic codes
+# Track sequential order counter to eliminate confusion
 if "order_sequence_counter" not in st.session_state:
-    st.session_state.order_sequence_counter = 3  # Starts at 3 because we have 2 pre-loaded mock orders
+    st.session_state.order_sequence_counter = 3
 
 # Simulate Persistent Database Tier
 if "mock_db_users" not in st.session_state:
@@ -35,18 +38,18 @@ if "mock_db_users" not in st.session_state:
 
 if "mock_db_orders" not in st.session_state:
     st.session_state.mock_db_orders = [
-        {"Order ID": "BZC-001-NJORO", "User Tag": "JL-333333", "Rider": "JL-222222", "Clothes (Kg)": 14, "Carpets (SqIn)": 0, "Duvets": 1, "Cost": 900, "Status": "Washing", "Location": "Njoro, Ngondu Court", "Date": "2026-05-29"},
-        {"Order ID": "BZC-002-NJORO", "User Tag": "JL-333333", "Rider": "None", "Clothes (Kg)": 0, "Carpets (SqIn)": 10, "Duvets": 0, "Cost": 1500, "Status": "Pickup Requested", "Location": "Njoro Market, Block B", "Date": "2026-05-30"}
+        {"Order ID": "BZC-001-NJORO", "User Tag": "JL-333333", "Rider": "JL-222222", "Clothes (Kg)": 14, "Pressing": 0, "Duvets": 1, "Carpets (SqIn)": 0, "Sneakers": 0, "Leather": 0, "Cost": 900, "Status": "Washing", "Location": "Njoro, Ngondu Court", "Date": "2026-05-29"},
+        {"Order ID": "BZC-002-NJORO", "User Tag": "JL-333333", "Rider": "None", "Clothes (Kg)": 0, "Pressing": 5, "Duvets": 0, "Carpets (SqIn)": 10, "Sneakers": 1, "Leather": 0, "Cost": 2300, "Status": "Pickup Requested", "Location": "Njoro Market, Block B", "Date": "2026-05-30"}
     ]
 
 if "user_session" not in st.session_state:
     st.session_state.user_session = None
 
 # ==========================================
-# 1. DESIGN SPECIFICATION
+# 1. PLATFORM TYPOGRAPHY BRANDING
 # ==========================================
-st.title("BIGZ CLEANERS ENTERPRISE")
-st.subheader("Integrated Multi-Tenant Logistics & Textile Care Platform")
+st.title("⚡ BIGZ CLEANERS ENTERPRISE")
+st.subheader("Integrated Premium Logistics & Advanced Textile Care Ecosystem")
 st.divider()
 
 # ==========================================
@@ -67,15 +70,15 @@ if not st.session_state.user_session:
             final_generated_tag = f"JL-{clean_tag_body}"
             
             if not reg_name or not custom_tag_raw or not reg_pass:
-                st.error("Registration Halted: All basic profile fields are mandatory.")
+                st.error("Registration Halted: All profile setup elements are mandatory.")
             elif final_generated_tag in st.session_state.mock_db_users:
-                st.error(f"Registration Halted: The tracking tag **{final_generated_tag}** is already active.")
+                st.error(f"Registration Halted: The tracking identifier **{final_generated_tag}** is already active.")
             elif reg_pass != reg_pass_conf:
-                st.error("Registration Halted: Passwords do not match!")
+                st.error("Registration Halted: Confirmation profile password metrics mismatch.")
             else:
                 st.session_state.mock_db_users[final_generated_tag] = {"name": reg_name, "role": "Customer", "pass": reg_pass}
                 st.balloons()
-                st.success(f"🎉 Account Saved! Your Login Tag is: **{final_generated_tag}**")
+                st.success(f"🎉 Account Saved! Your Permanent Login Tag is: **{final_generated_tag}**")
 
     with login_card:
         st.write("### Secure Portal Handshake")
@@ -89,7 +92,7 @@ if not st.session_state.user_session:
                 st.toast(f"Welcome back, {user_data['name']}!")
                 st.rerun()
             else:
-                st.error("Authentication failed: Security validation credentials mismatch.")
+                st.error("Authentication failed: Identity or validation key error.")
 
 # ==========================================
 # 3. INTERFACE DEPENDENCY: ROUTING SEPARATION
@@ -98,7 +101,6 @@ else:
     session = st.session_state.user_session
     rates = st.session_state.current_rates
     
-    # Top Status Enterprise Communication Bar
     col_s1, col_s2, col_s3 = st.columns([2, 2, 1])
     col_s1.write(f"Authorized Session: {session['name']} | Status: Online")
     col_s2.write(f"Access Level: {session['role']}")
@@ -111,64 +113,107 @@ else:
     # ARCHITECTURE CONTEXT A: CUSTOMER DASHBOARD
     # ------------------------------------------
     if session["role"] == "Customer":
-        c_tab1, c_tab2, c_tab3 = st.tabs(["Dispatch Request Engine", "Real-Time Tracking & History", "Live Rates & Financials"])
+        c_tab1, c_tab2, c_tab3 = st.tabs(["🚚 Dispatch Request Engine", "📍 Real-Time Tracking & History", "📋 Live Rates Matrix"])
         
         with c_tab3:
-            st.write("### Dynamic Operational Rates")
+            st.write("### Expanded Premium Service Valuation Matrix")
             rate_df = pd.DataFrame({
-                "Service Classification": ["Fabric Laundering", "Deep Carpet Restoration", "Heavy Duvets & Bedding", "Standard Pressing / Ironing"],
-                "Base Valuation Matrix": [f"KES {rates['clothes_rate']} per 7 Kg load", f"KES {rates['carpet_rate']} per sq. inch", f"KES {rates['duvet_rate']} fixed unit rate", "Service Not Offered (N/A)"]
+                "Service Category Plan": [
+                    "👕 Premium Fabric Laundering", 
+                    "🥼 Luxury Garment Pressing / Ironing",
+                    "🛏️ Heavy Duvets & Bedding Care", 
+                    "🫓 Deep Carpet Restoration",
+                    "👟 Premium Sneaker Deep Clean",
+                    "👜 Leather & Suede Restoration"
+                ],
+                "Live Rate Structure": [
+                    f"KES {rates['clothes_rate']} per 7 Kg machine load", 
+                    f"KES {rates['pressing_rate']} per individual piece",
+                    f"KES {rates['duvet_rate']} fixed unit rate", 
+                    f"KES {rates['carpet_rate']} per sq. inch",
+                    f"KES {rates['sneaker_rate']} per pair",
+                    f"KES {rates['leather_rate']} per unit item"
+                ]
             })
             st.table(rate_df)
             
         with c_tab1:
-            st.write("### Logistics Configuration Entry")
+            st.write("### Premium Interactive Booking Portal")
+            
+            # --- AI VISUAL SERVICES GRID DISPLAY ---
+            st.write("#### Our Standard-Setting Service Portfolio")
+            
+            img_col1, img_col2, img_col3 = st.columns(3)
+            with img_col1:
+                st.image("https://images.unsplash.com/photo-1545173168-9f1947e80150?q=80&w=600&auto=format&fit=crop", caption="1. Premium Fabric Laundering")
+            with img_col2:
+                st.image("https://images.unsplash.com/photo-1489274495757-95c7c837b101?q=80&w=600&auto=format&fit=crop", caption="2. Luxury Garment Pressing")
+            with img_col3:
+                st.image("https://images.unsplash.com/photo-1528938102132-4a9276b8e320?q=80&w=600&auto=format&fit=crop", caption="3. Heavy Duvets & Bedding")
+                
+            img_col4, img_col5, img_col6 = st.columns(3)
+            with img_col4:
+                st.image("https://images.unsplash.com/photo-1600121848594-d8644e57abab?q=80&w=600&auto=format&fit=crop", caption="4. Deep Carpet Restoration")
+            with img_col5:
+                st.image("https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=600&auto=format&fit=crop", caption="5. Sneaker Deep Clean & Detail")
+            with img_col6:
+                st.image("https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=600&auto=format&fit=crop", caption="6. Leather & Suede Restoration")
+
+            st.markdown("---")
+            st.write("#### Configure Your Logistics Requirements Below")
+            
             with st.form("customer_order_form"):
                 col_i1, col_i2, col_i3 = st.columns(3)
-                v_clothes = col_i1.number_input("Fabric Volume (7 Kg Machine Loads)", min_value=0, step=1)
-                v_carpet = col_i2.number_input("Carpet Metric Areas (Sq. Inches)", min_value=0, step=1)
-                v_duvet = col_i3.number_input("Duvet Allocation Count", min_value=0, step=1)
+                v_clothes = col_i1.number_input("Fabric Laundering (7 Kg Machine Loads)", min_value=0, step=1)
+                v_pressing = col_i2.number_input("Garment Pressing / Ironing (Item Count)", min_value=0, step=1)
+                v_duvet = col_i3.number_input("Duvet & Heavy Bedding Allocation Count", min_value=0, step=1)
                 
-                loc_txt = st.text_area("Detailed Fulfillment Coordinates / Gate / Apartment Number")
-                target_date = st.date_input("Scheduled Logistics Window", min_value=datetime.today())
+                col_i4, col_i5, col_i6 = st.columns(3)
+                v_carpet = col_i4.number_input("Carpet Restoration Areas (Sq. Inches)", min_value=0, step=1)
+                v_sneaker = col_i5.number_input("Sneaker Clean & Detail (Pairs Count)", min_value=0, step=1)
+                v_leather = col_i6.number_input("Leather & Suede Restoration (Item Count)", min_value=0, step=1)
                 
-                # Pricing Calculations
-                base_calc = (v_clothes * rates["clothes_rate"]) + (v_carpet * rates["carpet_rate"]) + (v_duvet * rates["duvet_rate"])
-                rush_surcharge = 150 if st.checkbox("Elevate to Express Rush Processing (+ KES 150)") else 0
+                loc_txt = st.text_area("Detailed Fulfillment Coordinates / Estate / Apartment / Room Number")
+                target_date = st.date_input("Scheduled Pick-Up & Logistics Window", min_value=datetime.today())
+                
+                # Dynamic Pricing Calculations across all 6 tiers
+                base_calc = (
+                    (v_clothes * rates["clothes_rate"]) + 
+                    (v_pressing * rates["pressing_rate"]) + 
+                    (v_duvet * rates["duvet_rate"]) + 
+                    (v_carpet * rates["carpet_rate"]) + 
+                    (v_sneaker * rates["sneaker_rate"]) + 
+                    (v_leather * rates["leather_rate"])
+                )
+                rush_surcharge = 150 if st.checkbox("⚡ Elevate to Express Rush Processing (+ KES 150)") else 0
                 gross_valuation = base_calc + rush_surcharge
                 
                 st.write(f"### Total Statement Computation: KES {gross_valuation:,}")
                 
                 if st.form_submit_button("Authorize Logistics Pipeline Allocation"):
                     if gross_valuation == 0:
-                        st.error("Operational processing parameters cannot evaluate to zero volumes.")
+                        st.error("Operational parameters cannot evaluate to zero volumes. Please select a service package.")
                     elif not loc_txt:
-                        st.error("Logistics drop points must be explicitly articulated.")
+                        st.error("Logistics drop points must be explicitly articulated to guide our riders.")
                     else:
-                        # SYSTEMATIC CODE ENGINE
-                        # Step 1: Get raw body of customer's tag (e.g., "SAMMY" out of "JL-SAMMY")
+                        # Systematic sequential unique key construction
                         tag_body = session["tag"].replace("JL-", "")
-                        
-                        # Step 2: Build the formatted tracking string with padding sequence numbers (e.g., 003, 004)
                         systematic_order_id = f"BZC-{st.session_state.order_sequence_counter:03d}-{tag_body}"
                         
-                        # Step 3: Append to system memory database
                         st.session_state.mock_db_orders.append({
                             "Order ID": systematic_order_id, "User Tag": session["tag"], "Rider": "None",
-                            "Clothes (Kg)": v_clothes*7, "Carpets (SqIn)": v_carpet, "Duvets": v_duvet,
+                            "Clothes (Kg)": v_clothes*7, "Pressing": v_pressing, "Duvets": v_duvet, 
+                            "Carpets (SqIn)": v_carpet, "Sneakers": v_sneaker, "Leather": v_leather,
                             "Cost": gross_valuation, "Status": "Pickup Requested", "Location": loc_txt, "Date": str(target_date)
                         })
                         
-                        # Step 4: Increment sequence counter for the next order
                         st.session_state.order_sequence_counter += 1
-                        
                         st.balloons()
                         
-                        # Prominent systematic code layout presentation
                         st.markdown("---")
-                        st.success("### 📦 ORDER PLACED SUCCESSFULLY!")
-                        st.markdown(f"#### Your Permanent Tracking Code is: `{systematic_order_id}`")
-                        st.write("Please write down this code or take a screenshot. Write this identifier on your delivery bags to ensure zero clothes mix-ups at our plant.")
+                        st.success("### 📦 LOGISTICS ACCESS RESERVED SUCCESSFULLY!")
+                        st.markdown(f"#### Your Systematic Verification Code is: `{systematic_order_id}`")
+                        st.write("Take a screenshot of this receipt box. Clearly mark this identifier code on your dispatch bags to completely block out clothes mix-ups at our plant.")
                         st.markdown("---")
 
         with c_tab2:
@@ -179,7 +224,6 @@ else:
                 st.info("Zero active system logs identified for current profile.")
             for o in cust_orders:
                 st.write(f"#### Tracking Identifier: {o['Order ID']}")
-                
                 status_map = ["Pickup Requested", "Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"]
                 curr_idx = status_map.index(o["Status"])
                 
@@ -191,8 +235,7 @@ else:
                     elif idx == curr_idx: tracker_line += f"**{step}** -> "
                     else: tracker_line += f"{step} -> "
                 st.write(tracker_line.rstrip(" -> "))
-                
-                st.write(f"Cost: KES {o['Cost']} | Location: {o['Location']}")
+                st.write(f"Cost: KES {o['Cost']} | Delivery Target Coordinates: {o['Location']}")
                 st.divider()
 
     # ------------------------------------------
@@ -210,7 +253,7 @@ else:
                 st.info("Zero logistics lines locked to your profile currently.")
             for o in rider_jobs:
                 st.write(f"### Job {o['Order ID']}")
-                st.write(f"Destination: {o['Location']} | Total: KES {o['Cost']}")
+                st.write(f"Destination Route: {o['Location']} | Total Settlement: KES {o['Cost']}")
                 new_stat = st.selectbox("Modify Status Node", ["Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"], key=o["Order ID"])
                 if st.button("Update Ledger Link", key="btn_"+o["Order ID"]):
                     o["Status"] = new_stat
@@ -222,7 +265,7 @@ else:
             if not unassigned_jobs:
                 st.info("Zero unassigned packages available in logistics queues.")
             for o in unassigned_jobs:
-                st.write(f"Order: {o['Order ID']} - Route: {o['Location']} (Value: KES {o['Cost']})")
+                st.write(f"Order: {o['Order ID']} - Route Target: {o['Location']} (Value: KES {o['Cost']})")
                 if st.button("Claim Route Access Contract", key="claim_"+o["Order ID"]):
                     o["Rider"] = session["tag"]
                     o["Status"] = "Rider Assigned"
@@ -255,12 +298,6 @@ else:
                 
             st.write("### Active Freight Ledger Master Core Table")
             st.dataframe(df_all, use_container_width=True)
-            
-            st.write("### Operational Asset Levels (Chemical Monitoring)")
-            col_ch1, col_ch2, col_ch3 = st.columns(3)
-            col_ch1.metric("Industrial Detergent Fluid", "134.5 Liters", delta="-4.2L")
-            col_ch2.metric("Premium Conditioning Softener", "65.0 Liters", delta="-1.5L")
-            col_ch3.metric("Concentrated Spot Agent", "22.1 Kg", delta="Stable")
 
         with adm_tab2:
             st.write("## Adjust Global System Pricing Configuration")
@@ -268,14 +305,21 @@ else:
             
             with st.form("price_control_form"):
                 col_p1, col_p2, col_p3 = st.columns(3)
-                
-                new_clothes = col_p1.number_input("Set Clothes Rate (per 7kg load)", min_value=0, value=st.session_state.current_rates["clothes_rate"])
-                new_carpet = col_p2.number_input("Set Carpet Rate (per Sq. Inch)", min_value=0, value=st.session_state.current_rates["carpet_rate"])
+                new_clothes = col_p1.number_input("Set Fabric Laundering Rate (per 7kg load)", min_value=0, value=st.session_state.current_rates["clothes_rate"])
+                new_pressing = col_p2.number_input("Set Garment Pressing Rate (per piece)", min_value=0, value=st.session_state.current_rates["pressing_rate"])
                 new_duvet = col_p3.number_input("Set Duvet Fixed Rate", min_value=0, value=st.session_state.current_rates["duvet_rate"])
+                
+                col_p4, col_p5, col_p6 = st.columns(3)
+                new_carpet = col_p4.number_input("Set Carpet Rate (per Sq. Inch)", min_value=0, value=st.session_state.current_rates["carpet_rate"])
+                new_sneaker = col_p5.number_input("Set Sneaker Cleaning Rate (per pair)", min_value=0, value=st.session_state.current_rates["sneaker_rate"])
+                new_leather = col_p6.number_input("Set Leather Restoration Rate (per item)", min_value=0, value=st.session_state.current_rates["leather_rate"])
                 
                 if st.form_submit_button("Broadcast New Rates to Website", use_container_width=True):
                     st.session_state.current_rates["clothes_rate"] = new_clothes
-                    st.session_state.current_rates["carpet_rate"] = new_carpet
+                    st.session_state.current_rates["pressing_rate"] = new_pressing
                     st.session_state.current_rates["duvet_rate"] = new_duvet
-                    st.success("Rates successfully updated globally!")
+                    st.session_state.current_rates["carpet_rate"] = new_carpet
+                    st.session_state.current_rates["sneaker_rate"] = new_sneaker
+                    st.session_state.current_rates["leather_rate"] = new_leather
+                    st.success("Expanded operational parameters successfully updated globally!")
                     st.rerun()
