@@ -1,45 +1,43 @@
 import streamlit as st
 import random
 import pandas as pd
-import bcrypt
 import plotly.express as px
 from datetime import datetime
-from supabase import create_client, Client
 
 # ==========================================
-# 0. CORE INITIALIZATION & SECURE CONNECTIVITY
+# 0. CORE CONFIGURATION & ARCHITECTURE SETUP
 # ==========================================
-st.set_page_config(page_title="Bigz Cleaners Enterprise", page_icon="🧺", layout="wide")
+st.set_page_config(
+    page_title="Bigz Cleaners Enterprise", 
+    page_icon="🧺", 
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# Connect to cloud-hosted Postgres layer
-SUPABASE_URL = "YOUR_SUPABASE_URL" 
-SUPABASE_KEY = "YOUR_SUPABASE_KEY"
+# Initialize live pricing matrix in system memory (Admin-modifiable)
+if "current_rates" not in st.session_state:
+    st.session_state.current_rates = {
+        "clothes_rate": 200,
+        "carpet_rate": 150,
+        "duvet_rate": 500
+    }
 
-@st.cache_resource
-def init_connection():
-    try:
-        return create_client(SUPABASE_URL, SUPABASE_KEY)
-    except Exception:
-        return None
-
-supabase: Client = init_connection()
-
-# Local failover simulation engine if cloud credentials are not yet updated
+# Simulate Persistent Database Tier
 if "mock_db_users" not in st.session_state:
     st.session_state.mock_db_users = {
         "JL-111111": {"name": "Admin Chief", "role": "Admin", "pass": "admin123"},
         "JL-222222": {"name": "Rider Express", "role": "Rider", "pass": "rider123"},
         "JL-333333": {"name": "Kamau Njoro", "role": "Customer", "pass": "customer123"}
     }
+
 if "mock_db_orders" not in st.session_state:
     st.session_state.mock_db_orders = [
         {"Order ID": "ORD-4821", "User Tag": "JL-333333", "Rider": "JL-222222", "Clothes (Kg)": 14, "Carpets (SqIn)": 0, "Duvets": 1, "Cost": 900, "Status": "Washing", "Location": "Njoro, Ngondu Court", "Date": "2026-05-29"},
         {"Order ID": "ORD-8829", "User Tag": "JL-333333", "Rider": "None", "Clothes (Kg)": 0, "Carpets (SqIn)": 10, "Duvets": 0, "Cost": 1500, "Status": "Pickup Requested", "Location": "Njoro Market, Block B", "Date": "2026-05-30"}
     ]
 
-# --- SESSION CONTEXT ENGINE ---
 if "user_session" not in st.session_state:
-    st.session_state.user_session = None  # Holds: {"tag": x, "name": x, "role": x}
+    st.session_state.user_session = None
 
 # ==========================================
 # 1. DESIGN SPECIFICATION: CORPORATE UI THEMING
@@ -97,6 +95,7 @@ if not st.session_state.user_session:
 # ==========================================
 else:
     session = st.session_state.user_session
+    rates = st.session_state.current_rates
     
     # Top Status Enterprise Communication Bar
     col_s1, col_s2, col_s3 = st.columns([2, 2, 1])
@@ -117,11 +116,11 @@ else:
             st.markdown("### 📊 Dynamic Operational Rates")
             rate_df = pd.DataFrame({
                 "Service Classification": ["👕 Fabric Laundering", "🫓 Deep Carpet Restoration", "🛏️ Heavy Duvets & Bedding", "🥼 Standard Pressing / Ironing"],
-                "Base Valuation Matrix": ["KES 200 per 7 Kg load", "KES 150 per sq. inch", "KES 500 fixed unit rate", "❌ Outside Offered Parameters (N/A)"]
+                "Base Valuation Matrix": [f"KES {rates['clothes_rate']} per 7 Kg load", f"KES {rates['carpet_rate']} per sq. inch", f"KES {rates['duvet_rate']} fixed unit rate", "❌ Outside Offered Parameters (N/A)"]
             })
             st.table(rate_df)
             
-        with tf1 := c_tab1:
+        with c_tab1:
             st.markdown("### 🛠️ Logistics Configuration Entry")
             with st.form("customer_order_form"):
                 col_i1, col_i2, col_i3 = st.columns(3)
@@ -132,8 +131,8 @@ else:
                 loc_txt = st.text_area("Detailed Fulfillment Coordinates / Gate / Apartment Number")
                 target_date = st.date_input("Scheduled Logistics Window", min_value=datetime.today())
                 
-                # Dynamic Pricing Calculations
-                base_calc = (v_clothes * 200) + (v_carpet * 150) + (v_duvet * 500)
+                # Dynamic Pricing Calculations mapped to current_rates variables
+                base_calc = (v_clothes * rates["clothes_rate"]) + (v_carpet * rates["carpet_rate"]) + (v_duvet * rates["duvet_rate"])
                 rush_surcharge = 150 if st.checkbox("⚡ Elevate to Express Rush Processing (+ KES 150)") else 0
                 gross_valuation = base_calc + rush_surcharge
                 
@@ -162,7 +161,7 @@ else:
                 st.info("Zero active system logs identified for current anchor context.")
             for o in cust_orders:
                 with st.container():
-                    st.markdown(f"<div class='card-container'>", unsafe_with_html=True)
+                    st.markdown("<div class='card-container'>", unsafe_with_html=True)
                     st.markdown(f"#### **Tracking Identifier: {o['Order ID']}**")
                     
                     # Live Visual Tracking Roadmap Indicator
@@ -172,7 +171,6 @@ else:
                     progress_bar_val = (curr_idx + 1) / len(status_map)
                     st.progress(progress_bar_val)
                     
-                    # Tracker text display formatting
                     tracker_line = ""
                     for idx, step in enumerate(status_map):
                         if idx < curr_idx: tracker_line += f"~~{step}~~ → "
@@ -221,35 +219,52 @@ else:
     # ARCHITECTURE CONTEXT C: ADMINISTRATIVE DASHBOARD
     # ------------------------------------------
     elif session["role"] in ["Admin", "Super Admin"]:
-        st.markdown("## 📊 Executive Strategic Analytics Matrix")
+        adm_tab1, adm_tab2 = st.tabs(["📈 Business Performance", "💰 System Price Control Center"])
         
-        # High level system operational calculation matrices
-        df_all = pd.DataFrame(st.session_state.mock_db_orders)
-        total_rev = df_all["Cost"].sum() if not df_all.empty else 0
-        total_jobs = len(df_all)
-        
-        col_m1, col_m2, col_m3 = st.columns(3)
-        with col_m1:
-            st.markdown(f"<div class='metric-card'><h3>Gross Processing Invoices</h3><h2>KES {total_rev:,}</h2></div>", unsafe_with_html=True)
-        with col_m2:
-            st.markdown(f"<div class='metric-card'><h3>Pipeline Log Count</h3><h2>{total_jobs} Requests</h2></div>", unsafe_with_html=True)
-        with col_m3:
-            st.markdown(f"<div class='metric-card'><h3>Active Working Footprint</h3><h2>{len(st.session_state.mock_db_users)} Users</h2></div>", unsafe_with_html=True)
+        with adm_tab1:
+            st.markdown("## 📊 Executive Strategic Analytics Matrix")
+            df_all = pd.DataFrame(st.session_state.mock_db_orders)
+            total_rev = df_all["Cost"].sum() if not df_all.empty else 0
+            total_jobs = len(df_all)
             
-        st.divider()
-        
-        # Operational charts data block using data frames
-        if not df_all.empty:
-            st.markdown("### 📈 Revenue Velocity Analysis")
-            fig = px.bar(df_all, x="Date", y="Cost", color="Status", title="Financial Freight Output Logs per Vector Window", barmode="group")
-            st.plotly_chart(fig, use_container_width=True)
+            col_m1, col_m2, col_m3 = st.columns(3)
+            with col_m1:
+                st.markdown(f"<div class='metric-card'><h3>Gross Processing Invoices</h3><h2>KES {total_rev:,}</h2></div>", unsafe_with_html=True)
+            with col_m2:
+                st.markdown(f"<div class='metric-card'><h3>Pipeline Log Count</h3><h2>{total_jobs} Requests</h2></div>", unsafe_with_html=True)
+            with col_m3:
+                st.markdown(f"<div class='metric-card'><h3>Active Working Footprint</h3><h2>{len(st.session_state.mock_db_users)} Users</h2></div>", unsafe_with_html=True)
+                
+            st.divider()
             
-        st.markdown("### 📥 Active Freight Ledger Master Core Table")
-        st.dataframe(df_all, use_container_width=True)
-        
-        # Resource & Chemical Allocation Modules
-        st.markdown("### 🧪 Operational Asset Levels (Chemical Monitoring)")
-        col_ch1, col_ch2, col_ch3 = st.columns(3)
-        col_ch1.metric("Industrial Detergent Fluid", "134.5 Liters", delta="-4.2L Consumption")
-        col_ch2.metric("Premium Conditioning Softener", "65.0 Liters", delta="-1.5L Consumption")
-        col_ch3.metric("Concentrated Spot Agent", "22.1 Kg", delta="Stable Inventory State")
+            if not df_all.empty:
+                st.markdown("### 📈 Revenue Velocity Analysis")
+                fig = px.bar(df_all, x="Date", y="Cost", color="Status", title="Financial Freight Output Logs per Vector Window", barmode="group")
+                st.plotly_chart(fig, use_container_width=True)
+                
+            st.markdown("### 📥 Active Freight Ledger Master Core Table")
+            st.dataframe(df_all, use_container_width=True)
+            
+            st.markdown("### 🧪 Operational Asset Levels (Chemical Monitoring)")
+            col_ch1, col_ch2, col_ch3 = st.columns(3)
+            col_ch1.metric("Industrial Detergent Fluid", "134.5 Liters", delta="-4.2L Consumption")
+            col_ch2.metric("Premium Conditioning Softener", "65.0 Liters", delta="-1.5L Consumption")
+            col_ch3.metric("Concentrated Spot Agent", "22.1 Kg", delta="Stable Inventory State")
+
+        with adm_tab2:
+            st.markdown("## ⚙️ Adjust Global System Pricing Configuration")
+            st.write("Modifying these variables alters pricing structures globally across all active customer calculation engines.")
+            
+            with st.form("price_control_form"):
+                col_p1, col_p2, col_p3 = st.columns(3)
+                
+                new_clothes = col_p1.number_input("Set Clothes Rate (per 7kg load)", min_value=0, value=st.session_state.current_rates["clothes_rate"])
+                new_carpet = col_p2.number_input("Set Carpet Rate (per Sq. Inch)", min_value=0, value=st.session_state.current_rates["carpet_rate"])
+                new_duvet = col_p3.number_input("Set Duvet Fixed Rate", min_value=0, value=st.session_state.current_rates["duvet_rate"])
+                
+                if st.form_submit_button("Broadcast New Rates to Website", use_container_width=True):
+                    st.session_state.current_rates["clothes_rate"] = new_clothes
+                    st.session_state.current_rates["carpet_rate"] = new_carpet
+                    st.session_state.current_rates["duvet_rate"] = new_duvet
+                    st.success("🚀 Rates successfully updated globally! All customer portals are now using the new pricing engines.")
+                    st.rerun()
