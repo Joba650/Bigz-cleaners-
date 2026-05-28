@@ -9,12 +9,11 @@ from datetime import datetime
 # ==========================================
 st.set_page_config(
     page_title="Bigz Cleaners Enterprise", 
-    page_icon="🧺", 
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Initialize live pricing matrix in system memory (Admin-modifiable)
+# Initialize live pricing matrix in system memory
 if "current_rates" not in st.session_state:
     st.session_state.current_rates = {
         "clothes_rate": 200,
@@ -40,20 +39,20 @@ if "user_session" not in st.session_state:
     st.session_state.user_session = None
 
 # ==========================================
-# 1. DESIGN SPECIFICATION: CORPORATE UI THEMING
+# 1. DESIGN SPECIFICATION: SAFE TYPOGRAPHY
 # ==========================================
-# Clean HTML injections to prevent style block formatting TypeErrors
-st.markdown("<h1 style='text-align: center; color: #1E3A8A; font-family: sans-serif; font-weight: 800; margin-bottom: 0px;'>🧺 BIGZ CLEANERS ENTERPRISE</h1>", unsafe_with_html=True)
-st.markdown("<p style='text-align: center; color: #4B5563; font-size: 16px; margin-bottom: 30px;'>Integrated Multi-Tenant Logistics & Textile Care Platform</p>", unsafe_with_html=True)
+st.title("BIGZ CLEANERS ENTERPRISE")
+st.subheader("Integrated Multi-Tenant Logistics & Textile Care Platform")
+st.divider()
 
 # ==========================================
 # 2. GLOBAL ROLE-BASED ACCESS CONTROLLER
 # ==========================================
 if not st.session_state.user_session:
-    login_card, register_card = st.tabs(["🔒 Secure Corporate Portal Access", "📝 Establish New Enterprise Account"])
+    login_card, register_card = st.tabs(["Secure Corporate Portal Access", "Establish New Enterprise Account"])
     
     with register_card:
-        st.subheader("Client Onboarding Workspace")
+        st.write("### Client Onboarding Workspace")
         reg_name = st.text_input("Full Official Registration Name")
         reg_phone = st.text_input("Mobile Routing Terminal Number (M-Pesa Vector)")
         reg_pass = st.text_input("Set Structural Access Phrase", type="password")
@@ -63,13 +62,13 @@ if not st.session_state.user_session:
                 generated_tag = f"JL-{random.randint(100000, 999999)}"
                 st.session_state.mock_db_users[generated_tag] = {"name": reg_name, "role": "Customer", "pass": reg_pass}
                 st.balloons()
-                st.success(f"🎉 Core Account Initialized! System Tracking Tag Assigned: **{generated_tag}**")
+                st.success(f"Account Initialized! System Tracking Tag Assigned: {generated_tag}")
                 st.info("Log in using this structural tracking tag on the adjacent panel.")
             else:
                 st.error("Operation halted: All authentication structures must be specified.")
 
     with login_card:
-        st.subheader("System Credentials Handshake")
+        st.write("### System Credentials Handshake")
         input_tag = st.text_input("Enter Structural Tracking Tag (e.g., JL-XXXXXX)").strip().upper()
         input_pass = st.text_input("System Entry Security Key", type="password")
         
@@ -91,8 +90,8 @@ else:
     
     # Top Status Enterprise Communication Bar
     col_s1, col_s2, col_s3 = st.columns([2, 2, 1])
-    col_s1.markdown(f"📦 **Active Anchor:** {session['name']} | Status: `Online`")
-    col_s2.markdown(f"🛡️ **System Access Context Tier:** `{session['role']}`")
+    col_s1.write(f"Authorized Session: {session['name']} | Status: Online")
+    col_s2.write(f"Access Level: {session['role']}")
     if col_s3.button("Terminate Secure Session", use_container_width=True):
         st.session_state.user_session = None
         st.rerun()
@@ -102,18 +101,18 @@ else:
     # ARCHITECTURE CONTEXT A: CUSTOMER DASHBOARD
     # ------------------------------------------
     if session["role"] == "Customer":
-        c_tab1, c_tab2, c_tab3 = st.tabs(["🚚 Dispatch Request Engine", "📍 Real-Time Tracking & History", "📋 Live Rates & Financials"])
+        c_tab1, c_tab2, c_tab3 = st.tabs(["Dispatch Request Engine", "Real-Time Tracking & History", "Live Rates & Financials"])
         
         with c_tab3:
-            st.markdown("### 📊 Dynamic Operational Rates")
+            st.write("### Dynamic Operational Rates")
             rate_df = pd.DataFrame({
-                "Service Classification": ["👕 Fabric Laundering", "🫓 Deep Carpet Restoration", "🛏️ Heavy Duvets & Bedding", "🥼 Standard Pressing / Ironing"],
-                "Base Valuation Matrix": [f"KES {rates['clothes_rate']} per 7 Kg load", f"KES {rates['carpet_rate']} per sq. inch", f"KES {rates['duvet_rate']} fixed unit rate", "❌ Outside Offered Parameters (N/A)"]
+                "Service Classification": ["Fabric Laundering", "Deep Carpet Restoration", "Heavy Duvets & Bedding", "Standard Pressing / Ironing"],
+                "Base Valuation Matrix": [f"KES {rates['clothes_rate']} per 7 Kg load", f"KES {rates['carpet_rate']} per sq. inch", f"KES {rates['duvet_rate']} fixed unit rate", "Service Not Offered (N/A)"]
             })
             st.table(rate_df)
             
         with c_tab1:
-            st.markdown("### 🛠️ Logistics Configuration Entry")
+            st.write("### Logistics Configuration Entry")
             with st.form("customer_order_form"):
                 col_i1, col_i2, col_i3 = st.columns(3)
                 v_clothes = col_i1.number_input("Fabric Volume (7 Kg Machine Loads)", min_value=0, step=1)
@@ -123,18 +122,18 @@ else:
                 loc_txt = st.text_area("Detailed Fulfillment Coordinates / Gate / Apartment Number")
                 target_date = st.date_input("Scheduled Logistics Window", min_value=datetime.today())
                 
-                # Dynamic Pricing Calculations mapped to current_rates variables
+                # Dynamic Pricing Calculations
                 base_calc = (v_clothes * rates["clothes_rate"]) + (v_carpet * rates["carpet_rate"]) + (v_duvet * rates["duvet_rate"])
-                rush_surcharge = 150 if st.checkbox("⚡ Elevate to Express Rush Processing (+ KES 150)") else 0
+                rush_surcharge = 150 if st.checkbox("Elevate to Express Rush Processing (+ KES 150)") else 0
                 gross_valuation = base_calc + rush_surcharge
                 
-                st.markdown(f"<h3 style='color: #10B981;'>Total Statement Computation: KES {gross_valuation:,}</h3>", unsafe_with_html=True)
+                st.write(f"### Total Statement Computation: KES {gross_valuation:,}")
                 
                 if st.form_submit_button("Authorize Logistics Pipeline Allocation"):
                     if gross_valuation == 0:
-                        st.error("System Core Warning: Operational processing parameters cannot evaluate to zero volumes.")
+                        st.error("Operational processing parameters cannot evaluate to zero volumes.")
                     elif not loc_txt:
-                        st.error("System Core Warning: Logistics drop points must be explicitly articulated.")
+                        st.error("Logistics drop points must be explicitly articulated.")
                     else:
                         new_order_id = f"ORD-{random.randint(1000, 9999)}"
                         st.session_state.mock_db_orders.append({
@@ -143,18 +142,17 @@ else:
                             "Cost": gross_valuation, "Status": "Pickup Requested", "Location": loc_txt, "Date": str(target_date)
                         })
                         st.balloons()
-                        st.success(f"📦 Invoice Generated: **{new_order_id}** is securely registered to your Permanent Tag ID: **{session['tag']}**")
+                        st.success(f"Invoice Generated: {new_order_id} is registered to your Tag: {session['tag']}")
 
         with c_tab2:
-            st.markdown("### 📍 Active Tracking Profiles")
+            st.write("### Active Tracking Profiles")
             cust_orders = [o for o in st.session_state.mock_db_orders if o["User Tag"] == session["tag"]]
             
             if not cust_orders:
-                st.info("Zero active system logs identified for current anchor context.")
+                st.info("Zero active system logs identified for current profile.")
             for o in cust_orders:
-                st.markdown(f"#### **Tracking Identifier: {o['Order ID']}**")
+                st.write(f"#### Tracking Identifier: {o['Order ID']}")
                 
-                # Live Visual Tracking Roadmap Indicator
                 status_map = ["Pickup Requested", "Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"]
                 curr_idx = status_map.index(o["Status"])
                 
@@ -163,56 +161,56 @@ else:
                 
                 tracker_line = ""
                 for idx, step in enumerate(status_map):
-                    if idx < curr_idx: tracker_line += f"~~{step}~~ → "
-                    elif idx == curr_idx: tracker_line += f"**{step} 🚚** → "
-                    else: tracker_line += f"{step} → "
-                st.markdown(tracker_line.rstrip(" → "))
+                    if idx < curr_idx: tracker_line += f"~~{step}~~ -> "
+                    elif idx == curr_idx: tracker_line += f"**{step}** -> "
+                    else: tracker_line += f"{step} -> "
+                st.write(tracker_line.rstrip(" -> "))
                 
-                st.markdown(f"Financial Valuation: **KES {o['Cost']}** | Logged Delivery Point: *{o['Location']}*")
+                st.write(f"Cost: KES {o['Cost']} | Location: {o['Location']}")
                 st.divider()
 
     # ------------------------------------------
     # ARCHITECTURE CONTEXT B: COURIER RIDER PANEL
     # ------------------------------------------
     elif session["role"] == "Rider":
-        st.markdown("### 💼 Assigned Logistics Routing Manifest")
+        st.write("### Assigned Logistics Routing Manifest")
         rider_jobs = [o for o in st.session_state.mock_db_orders if o["Rider"] == session["tag"]]
         unassigned_jobs = [o for o in st.session_state.mock_db_orders if o["Rider"] == "None"]
         
-        r_tab1, r_tab2 = st.tabs(["📋 Open Manifest Pipeline", "🌍 Available General Freight Market"])
+        r_tab1, r_tab2 = st.tabs(["Open Manifest Pipeline", "Available General Freight Market"])
         
         with r_tab1:
             if not rider_jobs:
-                st.info("Zero logistics lines locked to your tracking identifier profile currently.")
+                st.info("Zero logistics lines locked to your profile currently.")
             for o in rider_jobs:
-                st.markdown(f"### Job {o['Order ID']}")
-                st.write(f"🗺️ Destination: {o['Location']} | Financials: KES {o['Cost']}")
-                new_stat = st.selectbox("Modify Execution Node Node Vector Status", ["Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"], key=o["Order ID"])
+                st.write(f"### Job {o['Order ID']}")
+                st.write(f"Destination: {o['Location']} | Total: KES {o['Cost']}")
+                new_stat = st.selectbox("Modify Status Node", ["Rider Assigned", "Washing", "Drying", "Out for Delivery", "Delivered"], key=o["Order ID"])
                 if st.button("Update Ledger Link", key="btn_"+o["Order ID"]):
                     o["Status"] = new_stat
-                    st.success("Logistics database tracking line synchronized.")
+                    st.success("Logistics tracking line synchronized.")
                     st.rerun()
                 st.divider()
                         
         with r_tab2:
             if not unassigned_jobs:
-                st.info("Zero unassigned packages available in local Njoro logistics queues.")
+                st.info("Zero unassigned packages available in logistics queues.")
             for o in unassigned_jobs:
-                st.write(f"📦 **{o['Order ID']}** - Route Target: {o['Location']} (Est. Valuation: KES {o['Cost']})")
+                st.write(f"Order: {o['Order ID']} - Route: {o['Location']} (Value: KES {o['Cost']})")
                 if st.button("Claim Route Access Contract", key="claim_"+o["Order ID"]):
                     o["Rider"] = session["tag"]
                     o["Status"] = "Rider Assigned"
-                    st.success("Manifest tracking path safely assigned to your profile.")
+                    st.success("Manifest tracking path assigned.")
                     st.rerun()
 
     # ------------------------------------------
     # ARCHITECTURE CONTEXT C: ADMINISTRATIVE DASHBOARD
     # ------------------------------------------
     elif session["role"] in ["Admin", "Super Admin"]:
-        adm_tab1, adm_tab2 = st.tabs(["📈 Business Performance", "💰 System Price Control Center"])
+        adm_tab1, adm_tab2 = st.tabs(["Business Performance", "System Price Control Center"])
         
         with adm_tab1:
-            st.markdown("## 📊 Executive Strategic Analytics Matrix")
+            st.write("## Executive Strategic Analytics Matrix")
             df_all = pd.DataFrame(st.session_state.mock_db_orders)
             total_rev = df_all["Cost"].sum() if not df_all.empty else 0
             total_jobs = len(df_all)
@@ -225,22 +223,22 @@ else:
             st.divider()
             
             if not df_all.empty:
-                st.markdown("### 📈 Revenue Velocity Analysis")
-                fig = px.bar(df_all, x="Date", y="Cost", color="Status", title="Financial Freight Output Logs per Vector Window", barmode="group")
+                st.write("### Revenue Velocity Analysis")
+                fig = px.bar(df_all, x="Date", y="Cost", color="Status", title="Financial Freight Output Logs per Window", barmode="group")
                 st.plotly_chart(fig, use_container_width=True)
                 
-            st.markdown("### 📥 Active Freight Ledger Master Core Table")
+            st.write("### Active Freight Ledger Master Core Table")
             st.dataframe(df_all, use_container_width=True)
             
-            st.markdown("### 🧪 Operational Asset Levels (Chemical Monitoring)")
+            st.write("### Operational Asset Levels (Chemical Monitoring)")
             col_ch1, col_ch2, col_ch3 = st.columns(3)
-            col_ch1.metric("Industrial Detergent Fluid", "134.5 Liters", delta="-4.2L Consumption")
-            col_ch2.metric("Premium Conditioning Softener", "65.0 Liters", delta="-1.5L Consumption")
-            col_ch3.metric("Concentrated Spot Agent", "22.1 Kg", delta="Stable Inventory State")
+            col_ch1.metric("Industrial Detergent Fluid", "134.5 Liters", delta="-4.2L")
+            col_ch2.metric("Premium Conditioning Softener", "65.0 Liters", delta="-1.5L")
+            col_ch3.metric("Concentrated Spot Agent", "22.1 Kg", delta="Stable")
 
         with adm_tab2:
-            st.markdown("## ⚙️ Adjust Global System Pricing Configuration")
-            st.write("Modifying these variables alters pricing structures globally across all active customer calculation engines.")
+            st.write("## Adjust Global System Pricing Configuration")
+            st.write("Modifying these variables alters pricing structures across all customer portals instantly.")
             
             with st.form("price_control_form"):
                 col_p1, col_p2, col_p3 = st.columns(3)
@@ -253,5 +251,5 @@ else:
                     st.session_state.current_rates["clothes_rate"] = new_clothes
                     st.session_state.current_rates["carpet_rate"] = new_carpet
                     st.session_state.current_rates["duvet_rate"] = new_duvet
-                    st.success("🚀 Rates successfully updated globally! All customer portals are now using the new pricing engines.")
+                    st.success("Rates successfully updated globally!")
                     st.rerun()
