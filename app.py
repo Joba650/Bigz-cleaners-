@@ -21,7 +21,11 @@ if "current_rates" not in st.session_state:
         "duvet_rate": 500
     }
 
-# Simulate Persistent Database Tier (Stores Tracking Tags & Custom Passwords)
+# Track the sequential order counter to ensure systematic codes
+if "order_sequence_counter" not in st.session_state:
+    st.session_state.order_sequence_counter = 3  # Starts at 3 because we have 2 pre-loaded mock orders
+
+# Simulate Persistent Database Tier
 if "mock_db_users" not in st.session_state:
     st.session_state.mock_db_users = {
         "JL-111111": {"name": "Admin Chief", "role": "Admin", "pass": "admin123"},
@@ -31,8 +35,8 @@ if "mock_db_users" not in st.session_state:
 
 if "mock_db_orders" not in st.session_state:
     st.session_state.mock_db_orders = [
-        {"Order ID": "ORD-4821", "User Tag": "JL-333333", "Rider": "JL-222222", "Clothes (Kg)": 14, "Carpets (SqIn)": 0, "Duvets": 1, "Cost": 900, "Status": "Washing", "Location": "Njoro, Ngondu Court", "Date": "2026-05-29"},
-        {"Order ID": "ORD-8829", "User Tag": "JL-333333", "Rider": "None", "Clothes (Kg)": 0, "Carpets (SqIn)": 10, "Duvets": 0, "Cost": 1500, "Status": "Pickup Requested", "Location": "Njoro Market, Block B", "Date": "2026-05-30"}
+        {"Order ID": "BZC-001-NJORO", "User Tag": "JL-333333", "Rider": "JL-222222", "Clothes (Kg)": 14, "Carpets (SqIn)": 0, "Duvets": 1, "Cost": 900, "Status": "Washing", "Location": "Njoro, Ngondu Court", "Date": "2026-05-29"},
+        {"Order ID": "BZC-002-NJORO", "User Tag": "JL-333333", "Rider": "None", "Clothes (Kg)": 0, "Carpets (SqIn)": 10, "Duvets": 0, "Cost": 1500, "Status": "Pickup Requested", "Location": "Njoro Market, Block B", "Date": "2026-05-30"}
     ]
 
 if "user_session" not in st.session_state:
@@ -53,43 +57,25 @@ if not st.session_state.user_session:
     
     with register_card:
         st.write("### New Client Registration Matrix")
-        
-        # 1. Name Input
         reg_name = st.text_input("1. Full Official Name", key="reg_name")
-        
-        # 4. Unique Tracking Tag Custom Input
-        custom_tag_raw = st.text_input("2. Create Your Unique Tracking Tag (Numbers or Name)", key="custom_tag_input", help="Examples: 777777, SAMMY, KEVIN. The system automatically adds 'JL-' before it.")
-        
-        # 2 & 3. Password and Password Confirmation Fields
+        custom_tag_raw = st.text_input("2. Create Your Unique Tracking Tag (Numbers or Name)", key="custom_tag_input")
         reg_pass = st.text_input("3. Create Account Password", type="password", key="reg_pass")
         reg_pass_conf = st.text_input("4. Confirm Account Password", type="password", key="reg_pass_conf")
         
         if st.button("Register & Verify Account Entry", use_container_width=True):
-            # Clean up the custom tracking tag formatting
             clean_tag_body = custom_tag_raw.strip().upper().replace("JL-", "")
             final_generated_tag = f"JL-{clean_tag_body}"
             
-            # Validation Checks
-            if not reg_name:
-                st.error("Registration Halted: Full Official Name is required.")
-            elif not custom_tag_raw:
-                st.error("Registration Halted: You must choose a Unique Tracking Tag identifier.")
+            if not reg_name or not custom_tag_raw or not reg_pass:
+                st.error("Registration Halted: All basic profile fields are mandatory.")
             elif final_generated_tag in st.session_state.mock_db_users:
-                st.error(f"Registration Halted: The tracking tag **{final_generated_tag}** is already taken by someone else. Please try a different number or name combination!")
-            elif not reg_pass:
-                st.error("Registration Halted: Password cannot be left blank.")
+                st.error(f"Registration Halted: The tracking tag **{final_generated_tag}** is already active.")
             elif reg_pass != reg_pass_conf:
-                st.error("Registration Halted: Password fields do not match! Please check your spelling carefully.")
+                st.error("Registration Halted: Passwords do not match!")
             else:
-                # Successfully enter them directly into the system database memory
-                st.session_state.mock_db_users[final_generated_tag] = {
-                    "name": reg_name, 
-                    "role": "Customer", 
-                    "pass": reg_pass
-                }
+                st.session_state.mock_db_users[final_generated_tag] = {"name": reg_name, "role": "Customer", "pass": reg_pass}
                 st.balloons()
-                st.success(f"🎉 Account successfully saved to system! Your login Tag is: **{final_generated_tag}**")
-                st.info(f"Switch over to the 'Secure Portal Login' tab and enter **Tag: {final_generated_tag}** and your password to access your dashboard.")
+                st.success(f"🎉 Account Saved! Your Login Tag is: **{final_generated_tag}**")
 
     with login_card:
         st.write("### Secure Portal Handshake")
@@ -97,17 +83,13 @@ if not st.session_state.user_session:
         input_pass = st.text_input("Enter Your Account Password", type="password")
         
         if st.button("Authorize Connection", use_container_width=True):
-            # Verify details against system profiles records
-            if input_tag in st.session_state.mock_db_users:
-                if st.session_state.mock_db_users[input_tag]["pass"] == input_pass:
-                    user_data = st.session_state.mock_db_users[input_tag]
-                    st.session_state.user_session = {"tag": input_tag, "name": user_data["name"], "role": user_data["role"]}
-                    st.toast(f"Welcome back, {user_data['name']}!")
-                    st.rerun()
-                else:
-                    st.error("Authentication failed: Incorrect password string.")
+            if input_tag in st.session_state.mock_db_users and st.session_state.mock_db_users[input_tag]["pass"] == input_pass:
+                user_data = st.session_state.mock_db_users[input_tag]
+                st.session_state.user_session = {"tag": input_tag, "name": user_data["name"], "role": user_data["role"]}
+                st.toast(f"Welcome back, {user_data['name']}!")
+                st.rerun()
             else:
-                st.error("Authentication failed: Unique tracking tag not found.")
+                st.error("Authentication failed: Security validation credentials mismatch.")
 
 # ==========================================
 # 3. INTERFACE DEPENDENCY: ROUTING SEPARATION
@@ -150,7 +132,7 @@ else:
                 loc_txt = st.text_area("Detailed Fulfillment Coordinates / Gate / Apartment Number")
                 target_date = st.date_input("Scheduled Logistics Window", min_value=datetime.today())
                 
-                # Dynamic Pricing Calculations
+                # Pricing Calculations
                 base_calc = (v_clothes * rates["clothes_rate"]) + (v_carpet * rates["carpet_rate"]) + (v_duvet * rates["duvet_rate"])
                 rush_surcharge = 150 if st.checkbox("Elevate to Express Rush Processing (+ KES 150)") else 0
                 gross_valuation = base_calc + rush_surcharge
@@ -163,14 +145,31 @@ else:
                     elif not loc_txt:
                         st.error("Logistics drop points must be explicitly articulated.")
                     else:
-                        new_order_id = f"ORD-{random.randint(1000, 9999)}"
+                        # SYSTEMATIC CODE ENGINE
+                        # Step 1: Get raw body of customer's tag (e.g., "SAMMY" out of "JL-SAMMY")
+                        tag_body = session["tag"].replace("JL-", "")
+                        
+                        # Step 2: Build the formatted tracking string with padding sequence numbers (e.g., 003, 004)
+                        systematic_order_id = f"BZC-{st.session_state.order_sequence_counter:03d}-{tag_body}"
+                        
+                        # Step 3: Append to system memory database
                         st.session_state.mock_db_orders.append({
-                            "Order ID": new_order_id, "User Tag": session["tag"], "Rider": "None",
+                            "Order ID": systematic_order_id, "User Tag": session["tag"], "Rider": "None",
                             "Clothes (Kg)": v_clothes*7, "Carpets (SqIn)": v_carpet, "Duvets": v_duvet,
                             "Cost": gross_valuation, "Status": "Pickup Requested", "Location": loc_txt, "Date": str(target_date)
                         })
+                        
+                        # Step 4: Increment sequence counter for the next order
+                        st.session_state.order_sequence_counter += 1
+                        
                         st.balloons()
-                        st.success(f"Invoice Generated: {new_order_id} is registered to your Tag: {session['tag']}")
+                        
+                        # Prominent systematic code layout presentation
+                        st.markdown("---")
+                        st.success("### 📦 ORDER PLACED SUCCESSFULLY!")
+                        st.markdown(f"#### Your Permanent Tracking Code is: `{systematic_order_id}`")
+                        st.write("Please write down this code or take a screenshot. Write this identifier on your delivery bags to ensure zero clothes mix-ups at our plant.")
+                        st.markdown("---")
 
         with c_tab2:
             st.write("### Active Tracking Profiles")
