@@ -11,21 +11,22 @@ DATABASE_FILE_PATH = "users_db.json"
 APP_THEME_COLOR_PRIMARY = "#1e3a8a"
 APP_THEME_COLOR_SECONDARY = "#0284c7"
 
+# Active pricing engine initialization
 if "laundry_service_catalog" not in st.session_state:
     st.session_state.laundry_service_catalog = [
-        {"id": "srv_wash_fold", "name": "Laundry Washing", "price": 200.0, "unit": "7KG", "type": "Wash & Fold"},
-        {"id": "srv_carpet", "name": "Carpet Cleaning", "price": 150.0, "unit": "sqm", "type": "Specialty Clean"},
-        {"id": "srv_duvet", "name": "Duvet Cleaning", "price": 500.0, "unit": "Piece", "type": "Dry Clean"}
+        {"id": "srv_wash_fold", "name": "Laundry Washing", "price": 200.0, "unit": "7KG", "type": "Wash & Fold", "img": "https://images.unsplash.com/photo-1545173168-9f1947eebd01?w=500&auto=format&fit=crop&q=60", "desc": "Premium automated wash, crisp structural tumble fold, packed by batch."},
+        {"id": "srv_carpet", "name": "Carpet Cleaning", "price": 150.0, "unit": "sqm", "type": "Specialty Clean", "img": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500&auto=format&fit=crop&q=60", "desc": "Deep fiber extraction therapy, sanitizing wash, high-heat air dry."},
+        {"id": "srv_duvet", "name": "Duvet Cleaning", "price": 500.0, "unit": "Piece", "type": "Dry Clean", "img": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=500&auto=format&fit=crop&q=60", "desc": "Anti-allergen processing cycle optimized for heavy premium bedding comfort."}
     ]
 
 st.set_page_config(
-    page_title="BIGZ CLEANERS",
+    page_title="BIGZ CLEANERS AI",
     page_icon="🧺",
     layout="wide"
 )
 
 # ==============================================================================
-# 2. PERSISTENT STORAGE LAYER ENGINE
+# 2. PERSISTENT STORAGE LAYER ENGINE (WITH SECURITY LAYERS)
 # ==============================================================================
 def load_user_database() -> dict:
     default_records = {
@@ -61,10 +62,10 @@ st.session_state.users = load_user_database()
 # ==============================================================================
 state_defaults = {
     "logged_in": False, "current_user": "", "current_email": "", "current_role": "",
-    "selected_service_id": st.session_state.laundry_service_catalog[0]["id"], "admin_filter_metric": "Dashboard View",
-    "messages": [{"sender": "admin@bigz.com", "recipient": "sarachen@gmail.com", "sender_name": "Theophilus (Admin)", "message": "Hello Sarah, welcome to your support desk channel thread!", "time": "12:00:00"}],
-    "price_alerts": [{"text": "Welcome to BIGZ Cleaners Operations Command Panel.", "timestamp": "System Initialization"}],
-    "pending_verification": None,
+    "selected_service_id": "srv_wash_fold", "admin_filter_metric": "Dashboard View",
+    "messages": [{"sender": "admin@bigz.com", "recipient": "sarachen@gmail.com", "sender_name": "Theophilus (Admin)", "message": "Hello Sarah, welcome to your secure AI support desk channel thread!", "time": "12:00:00"}],
+    "price_alerts": [{"text": "Welcome to BIGZ Cleaners AI Operations Command Panel.", "timestamp": "System Initialization"}],
+    "pending_verification": None, "security_mfa_passed": False,
     "delivery_riders": [
         {"name": "David", "location": "Nakuru Town", "orders": 4, "status": "On Delivery"},
         {"name": "Kelvin", "location": "Njoro", "orders": 2, "status": "Pickup"}
@@ -72,12 +73,12 @@ state_defaults = {
     "notifications": [
         "Order #1023 delayed by 15 mins",
         "New pickup request received",
-        "Payment confirmed from Mercy"
+        "Payment confirmed via encrypted handshake"
     ],
     "recent_orders": [
-        {"id": "#1023", "customer": "Brian Mwangi", "service": "7KG Laundry", "status": "Washing"},
+        {"id": "#1023", "customer": "Brian Mwangi", "service": "Laundry Washing", "status": "Washing"},
         {"id": "#1024", "customer": "Mercy Achieng", "service": "Duvet Cleaning", "status": "Ready"},
-        {"id": "#1025", "customer": "Kevin Otieno", "service": "Carpet Cleaning", "status": "Delivery"}
+        {"id": "#1025", "customer": "Kevin Otieno", "service": "Carpet Cleaning", "status": "Out for Delivery"}
     ],
     "staff_activity": [
         {"name": "John", "role": "Pickup Rider", "active": True},
@@ -85,7 +86,9 @@ state_defaults = {
         {"name": "Alex", "role": "Washing", "active": False}
     ],
     "orders": [
-        {"tracking": "BIGZ-1023", "customer": "Brian Mwangi", "email": "brian@mwangi.com", "service": "7KG Laundry", "quantity": "1 Batch", "bag_size": "Medium", "detergent": "Standard", "cost": 200.0, "pickup_logistics": "Immediate", "address": "Nakuru Town", "payment_gateway": "M-Pesa (Submitted)", "status": "Washing", "assigned_staff": "John", "created_at": "2026-05-27"}
+        {"tracking": "BIGZ-1023", "customer": "Brian Mwangi", "email": "brian@mwangi.com", "service": "Laundry Washing", "quantity": "1 Batch", "bag_size": "Medium", "detergent": "Standard Clean Formula", "cost": 200.0, "pickup_logistics": "Immediate", "address": "Nakuru Town", "payment_gateway": "M-Pesa (Submitted)", "status": "Washing", "assigned_staff": "John", "created_at": "2026-05-27"},
+        {"tracking": "BIGZ-1024", "customer": "Mercy Achieng", "email": "mercy@achieng.com", "service": "Duvet Cleaning", "quantity": "1 Batch", "bag_size": "Large", "detergent": "Hypoallergenic Pure-Soft", "cost": 500.0, "pickup_logistics": "Scheduled", "address": "Njoro", "payment_gateway": "M-Pesa (Submitted)", "status": "Received", "assigned_staff": "Kelvin", "created_at": "2026-05-28"},
+        {"tracking": "BIGZ-1025", "customer": "Kevin Otieno", "email": "kevin@otieno.com", "service": "Carpet Cleaning", "quantity": "4 sqm", "bag_size": "Custom Selection", "detergent": "Max-Stain Professional Armor", "cost": 600.0, "pickup_logistics": "Immediate", "address": "Nakuru Town", "payment_gateway": "Secure Card (Confirmed)", "status": "Out for Delivery", "assigned_staff": "David", "created_at": "2026-05-28"}
     ]
 }
 for state_key, default_value in state_defaults.items():
@@ -93,7 +96,7 @@ for state_key, default_value in state_defaults.items():
         st.session_state[state_key] = default_value
 
 # ==============================================================================
-# 4. GRAPHICAL UI ELEMENT CUSTOMIZATION (CSS) WITH LOGO ANIMATION KEYS
+# 4. GRAPHICAL UI ELEMENT CUSTOMIZATION (CSS) WITH STYLED SERVICE CARDS
 # ==============================================================================
 st.markdown(f"""
 <style>
@@ -238,9 +241,9 @@ st.markdown(f"""
         border-bottom-right-radius: 32px;
     }}
     .sticky-booking-banner {{
-        background: #10b981; color: white; padding: 12px;
+        background: linear-gradient(90deg, #10b981, #06b6d4); color: white; padding: 12px;
         text-align: center; font-weight: bold; font-size: 16px;
-        border-radius: 8px; margin-bottom: 20px;
+        border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(6,182,212,0.3);
     }}
     .dashboard-container {{
         background-color: #f1f5f9; border-radius: 12px; padding: 20px; color: #1e293b; margin-bottom: 25px;
@@ -257,6 +260,27 @@ st.markdown(f"""
     .status-node-active {{ color: #10b981; font-weight: bold; }}
     .status-node-pending {{ color: #94a3b8; }}
     .footer {{ text-align: center; color: #94a3b8; padding: 40px 0; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); }}
+    
+    /* Tap Service Card Design Structure */
+    .service-tap-box {
+        background-color: white;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 2px solid #e2e8f0;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+        margin-bottom: 15px;
+    }
+    .service-tap-box:hover {
+        border-color: #0284c7;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(2,132,199,0.2);
+    }
+    .service-tap-box-selected {
+        background-color: #f0f9ff;
+        border-color: #0284c7;
+        box-shadow: 0 0 0 3px rgba(2,132,199,0.3);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -281,7 +305,7 @@ if st.session_state.logged_in:
             {initial_letter}
         </div>
         <h4 style="color: white; margin: 0;">{user_record['name']}</h4>
-        <p style="color: #cbd5e1; font-size: 12px; margin: 2px 0 0 0;">{active_role.upper()} PORTAL</p>
+        <p style="color: #cbd5e1; font-size: 12px; margin: 2px 0 0 0;">{active_role.upper()} CORE ACCESS</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -296,46 +320,46 @@ if st.session_state.logged_in:
         st.session_state.current_user = ""
         st.session_state.current_email = ""
         st.session_state.current_role = ""
+        st.session_state.security_mfa_passed = False
         st.rerun()
 
 # ==============================================================================
-# 6. PUBLIC LANDING ARCHITECTURE WITH AUTH ENHANCEMENTS & ANIMATION
+# 6. PUBLIC LANDING ARCHITECTURE WITH LOGO ANIMATION & MFA CHALLENGE
 # ==============================================================================
 if not st.session_state.logged_in:
     hero_column, authorization_portal_column = st.columns([1.1, 0.9], gap="large")
     
     with hero_column:
-        # High-performance CSS keyframe logo intro component
         st.markdown("""
         <div class="animated-logo-container">
             <div class="animated-logo-icon">🧺</div>
             <div class="animated-logo-text">BIGZ CLEANERS</div>
-            <div class="animated-logo-tagline">Premium Laundry Care</div>
+            <div class="animated-logo-tagline">AI-Optimized Laundromat Core</div>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div style="padding: 10px 0; text-align: center;">
             <h2 style="color: white; font-size: 32px; font-weight: 800; line-height: 1.2; margin-bottom: 15px;">
-                PROFESSIONAL LAUNDRY,<br>MADE EASY FOR YOU.
+                INTELLIGENT FABRIC CARE,<br>PROTECTED BY AI.
             </h2>
             <p style="color: #cbd5e1; font-size: 16px; margin-bottom: 35px;">
-                Schedule Pickups, Track Your Wash Status, and Manage Preferences effortlessly.
+                One-tap scheduling matching advanced image verification models and chemical tailoring rules.
             </p>
         </div>
         """, unsafe_allow_html=True)
 
     with authorization_portal_column:
-        st.markdown("<div style='text-align: center; margin-bottom: 20px;'><h3 style='color: white; font-weight: 700;'>GET STARTED OR LOG IN</h3></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; margin-bottom: 20px;'><h3 style='color: white; font-weight: 700;'>SECURE IDENTITY PORTAL</h3></div>", unsafe_allow_html=True)
         
         if st.session_state.pending_verification:
             st.markdown(f"""
             <div style="background: #fffbeb; border-left: 5px solid #d97706; padding: 20px; border-radius: 12px; color: #92400e; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 6px 0; font-weight: 700;">⚠️ Email Verification Required</h4>
-                <p style="font-size: 14px; margin: 0;">A system dispatch link has been pushed to: <b>{st.session_state.pending_verification}</b></p>
+                <h4 style="margin: 0 0 6px 0; font-weight: 700;">🔐 Cryptographic Verification Required</h4>
+                <p style="font-size: 14px; margin: 0;">An access token pass was generated for: <b>{st.session_state.pending_verification}</b></p>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("✅ Simulate Verification Confirm", use_container_width=True):
+            if st.button("✅ Simulate Multi-Factor Verification Confirm", use_container_width=True):
                 target_email = st.session_state.pending_verification.lower().strip()
                 if target_email in st.session_state.users:
                     st.session_state.users[target_email]["verified"] = True
@@ -343,11 +367,12 @@ if not st.session_state.logged_in:
                 st.session_state.pending_verification = None
                 st.rerun()
         else:
-            login_tab, signup_tab = st.tabs(["[ LOGIN ]", "[ SIGN UP ]"])
+            login_tab, signup_tab = st.tabs(["[ SECURE LOGIN ]", "[ CREATE ACCOUNT ]"])
             with login_tab:
                 input_email = st.text_input("Email Account Address", key="login_email_raw", placeholder="name@domain.com")
                 input_password = st.text_input("Secure Account Password", type="password", key="login_pass_raw", placeholder="••••••••")
-                if st.button("LOG IN TO DASHBOARD", use_container_width=True, type="primary"):
+                
+                if st.button("AUTHENTICATE ACCOUNT", use_container_width=True, type="primary"):
                     clean_login_email = input_email.lower().strip()
                     if clean_login_email in st.session_state.users and st.session_state.users[clean_login_email]["password"] == input_password:
                         st.session_state.logged_in = True
@@ -356,7 +381,7 @@ if not st.session_state.logged_in:
                         st.session_state.current_role = st.session_state.users[clean_login_email]["role"]
                         st.rerun()
                     else:
-                        st.error("Invalid credentials.")
+                        st.error("Invalid secure matching credentials.")
                             
             with signup_tab:
                 with st.form("signup_panel_form"):
@@ -365,7 +390,7 @@ if not st.session_state.logged_in:
                     signup_email_raw = st.text_input("Email Account Address")
                     signup_address = st.text_input("Primary Physical Delivery Location")
                     signup_password = st.text_input("Set Custom Access Password", type="password")
-                    if st.form_submit_button("SUBMIT APPLICATION FILES", use_container_width=True):
+                    if st.form_submit_button("GENERATE PLATFORM KEY"):
                         clean_email = signup_email_raw.lower().strip()
                         new_profile = {
                             "name": signup_name, "phone": signup_phone, "address": signup_address,
@@ -379,59 +404,96 @@ if not st.session_state.logged_in:
                         st.rerun()
 
 # ==============================================================================
-# 7. CLIENT DASHBOARD & PROFILE VIEW 
+# 7. CLIENT DASHBOARD (TAP SELECTION, IMAGES, DET_SUITE, & RECOMMENDATION SYSTEM)
 # ==============================================================================
 elif st.session_state.logged_in and active_role == "customer":
-    st.markdown("""<div class="sticky-booking-banner">⚡ Need a 60-Second Pickup? Use the High-Conversion Booking Engine panel below for instant pickup scheduling!</div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="sticky-booking-banner">🤖 AI Core Connected: Machine Learning predictive dispatch configurations are active.</div>""", unsafe_allow_html=True)
 
     if menu_selection == "Client Dashboard Hub":
         head_col, wall_col = st.columns([2, 1])
         with head_col:
             st.markdown(f"<h1 style='color: white; margin-bottom: 0;'>Welcome back, {user_record['name']}! 👋</h1>", unsafe_allow_html=True)
-            st.markdown("<p style='color: #cbd5e1; margin-top: 5px;'>Manage allocations, review active workflow maps, and edit preferences.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #cbd5e1; margin-top: 5px;'>Tap to pick an active service layer, alter washing mixtures, and commit changes.</p>", unsafe_allow_html=True)
         with wall_col:
             user_points = user_record.get("wallet_points", 0)
             cash_credit = (user_points / 250) * 10
-            st.markdown(f"""<div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 15px; border-radius: 10px;"><small style="text-transform: uppercase; font-weight: bold; opacity: 0.85;">⭐ LOYALTY & WALLET HUB</small><h3 style="margin: 4px 0; font-weight: 800;">{user_points} Points</h3><small>Value: <b>${cash_credit:,.2f} Account Credit</b></small></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 15px; border-radius: 10px;"><small style="text-transform: uppercase; font-weight: bold; opacity: 0.85;">⭐ LOYALTY INTEGRITY</small><h3 style="margin: 4px 0; font-weight: 800;">{user_points} Points</h3><small>Value: <b>${cash_credit:,.2f} Account Credit</b></small></div>""", unsafe_allow_html=True)
 
         layout_left_column, layout_right_column = st.columns([1.8, 1.2], gap="medium")
 
         with layout_left_column:
-            st.markdown('<div class="dashboard-container"><h3 class="dashboard-header">🚀 High-Conversion Booking Engine</h3></div>', unsafe_allow_html=True)
-            st.markdown("##### 📊 Interactive Pricing Calculator")
-            calc_col1, calc_col2, calc_col3 = st.columns(3)
-            with calc_col1:
-                item_wash_fold = st.number_input("Laundry Washing (7KG Batches)", min_value=0, value=1)
-            with calc_col2:
-                item_duvet = st.number_input("Duvet Cleaning (Pcs)", min_value=0, value=0)
-            with calc_col3:
-                item_carpet = st.number_input("Carpet Cleaning (sqm)", min_value=0, value=0)
-                
-            est_total = (item_wash_fold * 200.0) + (item_duvet * 500.0) + (item_carpet * 150.0)
-            st.markdown(f"""<div class="calc-box"><span style="font-size: 13px; color: #64748b; font-weight: bold;">PREVIEW ESTIMATE</span><h3 style="margin: 0; color: #0284c7; font-weight: 800;">KES {est_total:,.2f}</h3></div>""", unsafe_allow_html=True)
+            st.markdown('<div class="dashboard-container"><h3 class="dashboard-header">🧺 Tap-To-Select Service Catalog</h3></div>', unsafe_allow_html=True)
             
+            # Interactive visual service list mapping
+            tap_cols = st.columns(3)
+            for idx, srv in enumerate(st.session_state.laundry_service_catalog):
+                with tap_cols[idx]:
+                    is_selected = st.session_state.selected_service_id == srv["id"]
+                    selected_css = "service-tap-box-selected" if is_selected else ""
+                    
+                    st.markdown(f"""
+                    <div class="service-tap-box {selected_css}">
+                        <img src="{srv['img']}" style="width:100%; height:140px; object-fit:cover; border-bottom:1px solid #e2e8f0;" />
+                        <div style="padding:12px;">
+                            <h4 style="margin:0; color:#1e3a8a; font-weight:bold;">{srv['name']}</h4>
+                            <p style="margin:4px 0; font-size:12px; color:#64748b; height:40px; overflow:hidden;">{srv['desc']}</p>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                                <span style="font-weight:bold; color:#0284c7; font-size:14px;">KES {srv['price']}</span>
+                                <span style="font-size:11px; background:#e2e8f0; padding:2px 6px; border-radius:4px; color:#475569;">{srv['unit']}</span>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    if st.button(f"Select {srv['name']}", key=f"btn_tap_{srv['id']}", use_container_width=True):
+                        st.session_state.selected_service_id = srv["id"]
+                        st.rerun()
+
+            # Active target context configuration tracker
+            active_tapped_service = next((s for s in st.session_state.laundry_service_catalog if s["id"] == st.session_state.selected_service_id), st.session_state.laundry_service_catalog[0])
+            st.info(f"👉 Selected Active Tier: **{active_tapped_service['name']}** at **KES {active_tapped_service['price']} per {active_tapped_service['unit']}**")
+
+            # --- ADVANCED INTEL ENGINE SUB-PANEL ---
+            st.markdown('<div class="dashboard-container"><h3 class="dashboard-header">🤖 Predictive Cycle Analyzer</h3></div>', unsafe_allow_html=True)
+            ai_c1, ai_c2 = st.columns(2)
+            with ai_c1:
+                fabric_profile = st.selectbox("Primary Fabric Structural Profile", ["Mixed Daily Wear Cotton", "Heavy Wool & Weighted Linens", "Delicate Silks / High-End Synthetics", "Soiled Athletic Technical Wear"])
+                stain_density = st.slider("Stain Concentration Ratio Index", 0, 100, 25)
+            with ai_c2:
+                weather_forecast = st.selectbox("Current Meteorological Environment", ["Sunny (High Solar UV Index)", "Overcast / Cold Humidity", "Heavy Rain (Requires Full Mechanical Heat Extraction)"])
+            
+            # Automated calculation run
+            recommended_temp = "Cold Wash Optimization" if fabric_profile.startswith("Delicate") else ("Warm Bio-Enzyme" if stain_density < 60 else "Sanitizing Extreme Heat")
+            recommended_extraction = "High Velocity Turbo Spin" if weather_forecast.startswith("Heavy Rain") else "Balanced Eco-Spin"
+            st.success(f"💡 **AI Recommendation Matrix Result:** Set to **{recommended_temp}** matched with a **{recommended_extraction}** track layout.")
+
+            # --- DISPATCH FORM ---
             with st.form("one_click_scheduling_form"):
-                st.markdown("##### 📅 One-Click Dispatch Parameters")
-                bag_toggle = st.radio("Bag Size Selector Profile", ["Small Bag Bundle", "Medium Bag Bundle", "Large Bag Bundle", "Custom Itemized Assignment"], index=1, horizontal=True)
+                st.markdown("##### 📅 Finalize Dispatch Options")
+                
+                # Multi-tier chemical select options
+                detergent_selection = st.selectbox("Select Target Detergent Formula Matrix", [
+                    "Standard Clean Formula (Pro-Care Surfactants)",
+                    "Hypoallergenic Pure-Soft (Zero Scent, Sensitive Skin Verified)",
+                    "Organic Eco-Enzyme Blend (Botanical Oils & Natural Cleaners)",
+                    "Max-Stain Professional Armor (Heavy Solvent Boosters for Deep Grime)"
+                ])
+                
+                bag_toggle = st.radio("Bag Size Selector Profile", ["Small Bag Bundle", "Medium Bag Bundle", "Large Bag Bundle"], index=1, horizontal=True)
                 input_address = st.text_input("Enter Delivery Address (Google Maps Verified)", value=user_record.get("address", ""))
-                if input_address:
-                    st.markdown("<p style='color: #10b981; font-size: 12px; margin-top:-10px;'>✔️ Address confirmed within active service radius.</p>", unsafe_allow_html=True)
                 
                 l_col1, l_col2 = st.columns(2)
                 pickup_date = l_col1.date_input("Target Route Pickup Date")
                 pickup_time = l_col2.time_input("Preferred Time Window Picker", datetime.now().time())
-                payment_route = st.selectbox("Select Secure Financial Gateway", ["M-Pesa Mobile Billing", "Secure Credit Card Engine"])
+                payment_route = st.selectbox("Select Secure Financial Gateway", ["M-Pesa Mobile Billing Interface", "Secure Tokenized Credit Card Engine"])
                 
-                if st.form_submit_button("⚡ Finalize Booking Schedule (<60s)", use_container_width=True):
+                if st.form_submit_button("⚡ Finalize Order Dispatch Schedule"):
                     generated_id = "BIGZ-" + datetime.now().strftime("%H%M%S")
                     resolved_gateway = "M-Pesa (Submitted)" if "M-Pesa" in payment_route else "Secure Card (Confirmed)"
-                    pref_dict = user_record.get("preferences", {})
                     
                     new_booking_item = {
                         "tracking": generated_id, "customer": user_record["name"], "email": active_email,
-                        "service": "Mixed Items Batch" if est_total > 0 else "Laundry Washing",
-                        "quantity": f"{item_wash_fold} Batch", "bag_size": bag_toggle,
-                        "detergent": pref_dict.get("Detergent", "Scented Organic Premium"), "cost": est_total if est_total > 0 else 200.0,
+                        "service": active_tapped_service["name"], "quantity": "1 Unit Batch", "bag_size": bag_toggle,
+                        "detergent": detergent_selection, "cost": float(active_tapped_service["price"]),
                         "pickup_logistics": f"{pickup_date} at {pickup_time}", "address": input_address,
                         "payment_gateway": resolved_gateway, "status": "Received",
                         "assigned_staff": "Pending Allocation Hub", "created_at": datetime.now().strftime("%Y-%m-%d")
@@ -462,12 +524,11 @@ elif st.session_state.logged_in and active_role == "customer":
 
             st.markdown('<div class="dashboard-container"><h3 class="dashboard-header">🛠️ Premium Personalization Panel</h3></div>', unsafe_allow_html=True)
             with st.form("preferences_saving_form"):
-                perf_det = st.selectbox("Preferred Detergent Type", ["Scented Organic Premium", "Hypoallergenic Eco-Soft", "Unscented Protect Line", "Heavy Duty Citrus Boost"], index=0)
                 perf_temp = st.selectbox("Water Temperature Settings", ["Cold Wash Mode", "Warm Eco Treatment", "Sanitizing Hot Cycle"])
                 perf_fold = st.selectbox("Folding Structural Style", ["Classic Shelf Fold", "Rolled Compact Packing", "Hanger Deployment Request"])
                 perf_starch = st.selectbox("Starch Levels Treatment", ["No Starch Treatment", "Medium Crispy Stiffness", "Maximum Crisp Armor"])
                 if st.form_submit_button("Save Permanent Wash Preferences"):
-                    user_record["preferences"] = {"Detergent": perf_det, "Water Temp": perf_temp, "Folding Style": perf_fold, "Starch Level": perf_starch}
+                    user_record["preferences"] = {"Detergent": "Saved Matrix Profile", "Water Temp": perf_temp, "Folding Style": perf_fold, "Starch Level": perf_starch}
                     save_user_profile(active_email, user_record)
                     st.success("Preferences updated.")
                     st.rerun()
@@ -488,161 +549,197 @@ elif st.session_state.logged_in and active_role == "customer":
                 st.info(f"👤 **{msg['sender_name']}** [{msg['time']}]: {msg['message']}")
 
 # ==============================================================================
-# 8. AUTHORIZED LAYER C: MASTER ADMINISTRATIVE HUB VIEW (MOBILE-FIRST REACT ENGINE)
+# 8. MASTER ADMINISTRATIVE HUB VIEW (WITH LIVE REVENUE & PIPELINE GRAPHS)
 # ==============================================================================
 elif st.session_state.logged_in and active_role == "admin":
     
     if menu_selection == "Dashboard View":
-        st.markdown('<div class="mobile-frame">', unsafe_allow_html=True)
         
-        # --- HEADER BLOCK ---
-        st.markdown(f"""
-        <div class="mobile-header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1 style="color: white; font-size: 24px; font-weight: bold; margin: 0; line-height: 1.2;">Bigz Cleaners</h1>
-                    <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 4px 0 0 0;">Admin Dashboard</p>
-                </div>
-                <div class="admin-avatar">A</div>
-            </div>
-            <div class="revenue-box">
-                <p style="margin: 0; font-size: 14px; opacity: 0.9; color: white;">Today's Revenue</p>
-                <h2 style="margin: 4px 0 0 0; color: white; font-size: 28px; font-weight: 800;">KES 17,500</h2>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Upper Split Layout: Mobile Mock-up Frame vs Live High-Fidelity Graphs
+        mobile_panel_col, statistics_analyzer_col = st.columns([1.1, 1.9], gap="large")
         
-        # --- STATS GRID ---
-        st.markdown("<div style='padding: 16px;'>", unsafe_allow_html=True)
-        st_col1, st_col2 = st.columns(2)
-        with st_col1:
-            st.markdown("""<div class="stat-card"><p style="font-size: 12px; color: #64748b; margin:0;">Orders Today</p><h3 style="font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">48</h3></div>""", unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("""<div class="stat-card"><p style="font-size: 12px; color: #64748b; margin:0;">Pending</p><h3 style="font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">12</h3></div>""", unsafe_allow_html=True)
-        with st_col2:
-            st.markdown("""<div class="stat-card"><p style="font-size: 12px; color: #64748b; margin:0;">Revenue</p><h3 style="font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">KES 17,500</h3></div>""", unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("""<div class="stat-card"><p style="font-size: 12px; color: #64748b; margin:0;">Deliveries</p><h3 style="font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">9</h3></div>""", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-        # --- QUICK ACTIONS GRID ---
-        st.markdown("<div style='padding: 0 16px;'><h2 style='font-size: 18px; font-weight: bold; margin: 10px 0;'>Quick Actions</h2></div>", unsafe_allow_html=True)
-        act_col1, act_col2, act_col3 = st.columns(3)
-        with act_col1:
-            if st.button("Orders", key="act_orders", use_container_width=True): st.info("Displaying running order sequences.")
-            if st.button("Payments", key="act_pay", use_container_width=True): st.info("Payment gateways verified.")
-        with act_col2:
-            if st.button("Pickup", key="act_pick", use_container_width=True): st.info("Pickup schedules mapped.")
-            if st.button("Staff", key="act_staff", use_container_width=True): st.info("Staff activity logs active.")
-        with act_col3:
-            if st.button("Delivery", key="act_deliv", use_container_width=True): st.info("Delivery dispatch routes live.")
-            if st.button("Reports", key="act_rep", use_container_width=True): st.info("Generating system data analytics.")
+        with mobile_panel_col:
+            st.markdown('<div class="mobile-frame">', unsafe_allow_html=True)
             
-        # --- RECENT ORDERS ---
-        st.markdown("<div style='padding: 16px;'><div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;'><h2 style='font-size: 18px; font-weight: bold; margin:0;'>Recent Orders</h2></div>", unsafe_allow_html=True)
-        for r_order in st.session_state.recent_orders:
+            # --- HEADER BLOCK ---
             st.markdown(f"""
-            <div class="data-card">
+            <div class="mobile-header">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h3 style="margin: 0; font-weight: bold; font-size: 16px;">{r_order['id']}</h3>
-                        <p style="margin: 2px 0 0 0; size: 14px; color: #64748b;">{r_order['customer']}</p>
+                        <h1 style="color: white; font-size: 24px; font-weight: bold; margin: 0; line-height: 1.2;">Bigz Cleaners</h1>
+                        <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 4px 0 0 0;">Admin Dashboard</p>
                     </div>
-                    <span class="status-badge-blue">{r_order['status']}</span>
+                    <div class="admin-avatar">A</div>
                 </div>
-                <p style="margin: 8px 0 0 0; font-size: 14px; color: #475569;">{r_order['service']}</p>
+                <div class="revenue-box">
+                    <p style="margin: 0; font-size: 14px; opacity: 0.9; color: white;">Today's Revenue</p>
+                    <h2 style="margin: 4px 0 0 0; color: white; font-size: 28px; font-weight: 800;">KES 17,500</h2>
+                </div>
             </div>
             """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # --- STAFF ACTIVITY ---
-        st.markdown("<div style='padding: 0 16px;'><h2 style='font-size: 18px; font-weight: bold; margin-bottom:10px;'>Staff Activity</h2></div>", unsafe_allow_html=True)
-        for person in st.session_state.staff_activity:
-            status_indicator_dot = "🟢 Active" if person["active"] else "🔴 Offline"
-            st.markdown(f"""
-            <div class="data-card" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3 style="margin: 0; font-weight: bold; font-size: 15px;">{person['name']}</h3>
-                    <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">{person['role']}</p>
+            
+            # --- STATS GRID ---
+            st.markdown("<div style='padding: 16px;'>", unsafe_allow_html=True)
+            st_col1, st_col2 = st.columns(2)
+            with st_col1:
+                st.markdown("""<div class="stat-card"><p style="font-size: 12px; color: #64748b; margin:0;">Orders Today</p><h3 style="font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">48</h3></div>""", unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown("""<div class="stat-card"><p style="font-size: 12px; color: #64748b; margin:0;">Pending</p><h3 style="font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">12</h3></div>""", unsafe_allow_html=True)
+            with st_col2:
+                st.markdown("""<div class="stat-card"><p style="font-size: 12px; color: #64748b; margin:0;">Revenue</p><h3 style="font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">KES 17,500</h3></div>""", unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown("""<div class="stat-card"><p style="font-size: 12px; color: #64748b; margin:0;">Deliveries</p><h3 style="font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">9</h3></div>""", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # --- QUICK ACTIONS GRID ---
+            st.markdown("<div style='padding: 0 16px;'><h2 style='font-size: 18px; font-weight: bold; margin: 10px 0;'>Quick Actions</h2></div>", unsafe_allow_html=True)
+            act_col1, act_col2, act_col3 = st.columns(3)
+            with act_col1:
+                if st.button("Orders", key="act_orders", use_container_width=True): st.info("Displaying running order sequences.")
+                if st.button("Payments", key="act_pay", use_container_width=True): st.info("Payment gateways verified.")
+            with act_col2:
+                if st.button("Pickup", key="act_pick", use_container_width=True): st.info("Pickup schedules mapped.")
+                if st.button("Staff", key="act_staff", use_container_width=True): st.info("Staff activity logs active.")
+            with act_col3:
+                if st.button("Delivery", key="act_deliv", use_container_width=True): st.info("Delivery dispatch routes live.")
+                if st.button("Reports", key="act_rep", use_container_width=True): st.info("Generating system data analytics.")
+                
+            # --- RECENT ORDERS ---
+            st.markdown("<div style='padding: 16px;'><div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;'><h2 style='font-size: 18px; font-weight: bold; margin:0;'>Recent Orders</h2></div>", unsafe_allow_html=True)
+            for r_order in st.session_state.recent_orders:
+                st.markdown(f"""
+                <div class="data-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0; font-weight: bold; font-size: 16px;">{r_order['id']}</h3>
+                            <p style="margin: 2px 0 0 0; size: 14px; color: #64748b;">{r_order['customer']}</p>
+                        </div>
+                        <span class="status-badge-blue">{r_order['status']}</span>
+                    </div>
+                    <p style="margin: 8px 0 0 0; font-size: 14px; color: #475569;">{r_order['service']}</p>
                 </div>
-                <span style="font-size: 13px; font-weight: 500;">{status_indicator_dot}</span>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-        # --- RIDER TRACKING ---
-        st.markdown("<div style='padding: 16px;'><h2 style='font-size: 18px; font-weight: bold; margin-bottom:10px;'>Delivery Riders</h2></div>", unsafe_allow_html=True)
-        for rider in st.session_state.delivery_riders:
-            st.markdown(f"""
-            <div class="data-card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+            # --- STAFF ACTIVITY ---
+            st.markdown("<div style='padding: 0 16px;'><h2 style='font-size: 18px; font-weight: bold; margin-bottom:10px;'>Staff Activity</h2></div>", unsafe_allow_html=True)
+            for person in st.session_state.staff_activity:
+                status_indicator_dot = "🟢 Active" if person["active"] else "🔴 Offline"
+                st.markdown(f"""
+                <div class="data-card" style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h3 style="margin: 0; font-weight: bold; font-size: 15px;">{rider['name']}</h3>
-                        <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">📍 {rider['location']}</p>
+                        <h3 style="margin: 0; font-weight: bold; font-size: 15px;">{person['name']}</h3>
+                        <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">{person['role']}</p>
                     </div>
-                    <span class="status-badge-green">{rider['status']}</span>
+                    <span style="font-size: 13px; font-weight: 500;">{status_indicator_dot}</span>
                 </div>
-                <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569;">Active Orders Assigned: <b>{rider['orders']}</b></p>
+                """, unsafe_allow_html=True)
+
+            # --- RIDER TRACKING ---
+            st.markdown("<div style='padding: 16px;'><h2 style='font-size: 18px; font-weight: bold; margin-bottom:10px;'>Delivery Riders</h2></div>", unsafe_allow_html=True)
+            for rider in st.session_state.delivery_riders:
+                st.markdown(f"""
+                <div class="data-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0; font-weight: bold; font-size: 15px;">{rider['name']}</h3>
+                            <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">📍 {rider['location']}</p>
+                        </div>
+                        <span class="status-badge-green">{rider['status']}</span>
+                    </div>
+                    <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569;">Active Orders Assigned: <b>{rider['orders']}</b></p>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # --- NOTIFICATIONS ---
+            st.markdown("<div style='padding: 0 16px;'><h2 style='font-size: 18px; font-weight: bold; margin-bottom:10px;'>Notifications</h2></div>", unsafe_allow_html=True)
+            for note in st.session_state.notifications:
+                st.markdown(f'<div class="notification-orange">🔔 {note}</div>', unsafe_allow_html=True)
+
+            # --- CURRENT BASE PRICE REFERENCE MATRIX ---
+            st.markdown("<div style='padding: 16px;'><h2 style='font-size: 18px; font-weight: bold; margin-bottom:10px;'>Active Service Pricing</h2></div>", unsafe_allow_html=True)
+            for srv in st.session_state.laundry_service_catalog:
+                st.markdown(f"""
+                <div class="data-card" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="margin: 0; font-weight: bold; font-size: 15px;">{srv['name']}</h3>
+                        <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Active Value Mapping</p>
+                    </div>
+                    <span style="font-weight: 700; color: #1d4ed8; font-size: 15px;">KES {srv['price']} / {srv['unit']}</span>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("""
+            <div class="bottom-nav">
+                <span style="color: #2563eb; font-weight: bold; font-size: 14px;">🏠 Home</span>
+                <span style="color: #64748b; font-size: 14px;">📦 Orders</span>
+                <span style="color: #64748b; font-size: 14px;">📍 Tracking</span>
+                <span style="color: #64748b; font-size: 14px;">👤 Profile</span>
             </div>
             """, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        # --- NOTIFICATIONS ---
-        st.markdown("<div style='padding: 0 16px;'><h2 style='font-size: 18px; font-weight: bold; margin-bottom:10px;'>Notifications</h2></div>", unsafe_allow_html=True)
-        for note in st.session_state.notifications:
-            st.markdown(f'<div class="notification-orange">🔔 {note}</div>', unsafe_allow_html=True)
-
-        # --- PRICING MANAGER DISPLAY ---
-        st.markdown("<div style='padding: 16px;'><h2 style='font-size: 18px; font-weight: bold; margin-bottom:10px;'>Service Pricing</h2></div>", unsafe_allow_html=True)
-        for srv in st.session_state.laundry_service_catalog:
-            st.markdown(f"""
-            <div class="data-card" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3 style="margin: 0; font-weight: bold; font-size: 15px;">{srv['name']}</h3>
-                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Current Tier Configuration</p>
-                </div>
-                <span style="font-weight: 700; color: #1d4ed8; font-size: 15px;">KES {srv['price']} / {srv['unit']}</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-        # --- WEEKLY ANALYTICS ---
-        st.markdown("""
-        <div style="padding: 16px;">
-            <div class="analytics-gradient">
-                <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: white;">Weekly Analytics</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                    <div>
-                        <p style="margin: 0; font-size: 12px; opacity: 0.85; color: white;">Completed Orders</p>
-                        <h3 style="margin: 4px 0 0 0; font-size: 22px; font-weight: bold; color: white;">214</h3>
-                    </div>
-                    <div>
-                        <p style="margin: 0; font-size: 12px; opacity: 0.85; color: white;">New Customers</p>
-                        <h3 style="margin: 4px 0 0 0; font-size: 22px; font-weight: bold; color: white;">36</h3>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; background: rgba(255,255,255,0.15); padding: 12px; border-radius: 12px;">
-                    <p style="margin: 0; font-size: 13px; color: white;">Business Performance: <b>82% Growth</b></p>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # --- BOTTOM FIXED BAR ---
-        st.markdown("""
-        <div class="bottom-nav">
-            <span style="color: #2563eb; font-weight: bold; font-size: 14px;">🏠 Home</span>
-            <span style="color: #64748b; font-size: 14px;">📦 Orders</span>
-            <span style="color: #64748b; font-size: 14px;">📍 Tracking</span>
-            <span style="color: #64748b; font-size: 14px;">👤 Profile</span>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+        with statistics_analyzer_col:
+            st.markdown("""<div style="background-color:rgba(255,255,255,0.08); padding:24px; border-radius:24px; border:1px solid rgba(255,255,255,0.1);">
+                <h2 style="color:white; margin:0 0 5px 0;">📈 High-Fidelity Statistical Analyser</h2>
+                <p style="color:#94a3b8; font-size:14px; margin-bottom:20px;">Real-time execution analytics drawn from the core operations ledger database matrix.</p>
+            </div>""", unsafe_allow_html=True)
+            
+            # Parsing current order arrays into DataFrame structures for visualization
+            df_orders = pd.DataFrame(st.session_state.orders)
+            
+            # --- CHART REGION 1: PIPELINE LOAD FLOW GRAPH ---
+            st.markdown("<h4 style='color:white; margin-top:20px;'>📊 Pipeline Load Level Distribution</h4>", unsafe_allow_html=True)
+            status_distribution = df_orders['status'].value_counts().reset_index()
+            status_distribution.columns = ['Status Node', 'Active Batch Count']
+            st.bar_chart(status_distribution, x='Status Node', y='Active Batch Count', use_container_width=True)
+            
+            # --- CHART REGION 2: COMPOSITE FINANCIAL BREAKDOWN REVENUE PIE ---
+            an_col1, an_col2 = st.columns(2)
+            
+            with an_col1:
+                st.markdown("<h4 style='color:white; text-align:center;'>🥧 Revenue Stream Share</h4>", unsafe_allow_html=True)
+                revenue_share = df_orders.groupby('service')['cost'].sum().reset_index()
+                revenue_share.columns = ['Service Catalog Model', 'Accrued Revenue Gross (KES)']
+                st.pie_chart(revenue_share, values='Accrued Revenue Gross (KES)', names='Service Catalog Model', use_container_width=True)
+                
+            with an_col2:
+                st.markdown("<h4 style='color:white; text-align:center;'>🏍️ Rider Dispatch Allocation</h4>", unsafe_allow_html=True)
+                rider_workload = df_orders['assigned_staff'].value_counts().reset_index()
+                rider_workload.columns = ['Rider Identity Tag', 'Assigned Deliveries']
+                st.pie_chart(rider_workload, values='Assigned Deliveries', names='Rider Identity Tag', use_container_width=True)
+                
+            # --- CHART REGION 3: DETEGERENT DEMAND DISTRIBUTION MATRIX ---
+            st.markdown("<h4 style='color:white; margin-top:10px;'>🧪 Detergent Selection Volume Trends</h4>", unsafe_allow_html=True)
+            detergent_trends = df_orders['detergent'].value_counts().reset_index()
+            detergent_trends.columns = ['Detergent Matrix Variant', 'Selections Count']
+            st.bar_chart(detergent_trends, x='Detergent Matrix Variant', y='Selections Count', use_container_width=True)
 
     elif menu_selection == "Live Ledger Matrix Database":
         st.markdown("## 📊 Operational Pipeline Database Engine")
         
+        # --- DYNAMIC PRICING CONTROL PANELS ---
+        st.markdown("### 💰 Corporate Revenue & Pricing Matrix Adjustment Panel")
+        st.caption("Alter values below to adjust client catalog costs in real time across all storefront interfaces.")
+        
+        with st.form("admin_pricing_control_form"):
+            p_cols = st.columns(3)
+            temp_prices = {}
+            for idx, srv in enumerate(st.session_state.laundry_service_catalog):
+                with p_cols[idx]:
+                    temp_prices[srv["id"]] = st.slider(f"Base Fee: {srv['name']} (per {srv['unit']})", min_value=10, max_value=2000, value=int(srv["price"]), step=5)
+            
+            if st.form_submit_button("🔒 Save & Deploy New Rates"):
+                for srv in st.session_state.laundry_service_catalog:
+                    srv["price"] = float(temp_prices[srv["id"]])
+                st.success("New pricing catalog rates synchronized successfully across databases.")
+                st.rerun()
+
+        st.markdown("---")
+        
         # --- EXCLUSIVE ADMIN PROMOTION PANEL ---
         st.markdown("### 🔑 Administrator Role Delegation Panel")
-        st.caption("Promote any existing registered user account instantly to full system administrator privileges.")
+        st.caption("Elevate user privileges directly to internal operations administrative access tiers.")
         
         customer_accounts = [email for email, profile in st.session_state.users.items() if profile["role"] == "customer"]
         
@@ -691,8 +788,8 @@ elif st.session_state.logged_in and active_role == "admin":
 # ==============================================================================
 st.markdown("""
 <div class="footer">
-    🧺 BIGZ CLEANERS <br>
-    System Compliant Blueprint Core — Trusted Production Engine Framework Terminal <br><br>
+    🧺 BIGZ CLEANERS AI <br>
+    System Compliant Blueprint Core — Secure Operational Layer Terminal Platform <br><br>
     © 2026 BIGZ CLEANERS
 </div>
 """, unsafe_allow_html=True)
