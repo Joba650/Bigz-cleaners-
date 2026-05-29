@@ -186,6 +186,7 @@ else:
                 loc_txt = st.text_area("Detailed Fulfillment Delivery Coordinates / Gate / House Number")
                 target_date = st.date_input("Scheduled Pick-Up Window", min_value=datetime.today())
                 
+                # FUNCTIONAL COMPUTATION LOGIC
                 # Reset quantities to 0 if the respective checkbox was not selected
                 final_clothes = v_clothes if select_clothes else 0
                 final_pressing = v_pressing if select_pressing else 0
@@ -218,6 +219,7 @@ else:
                         tag_body = session["name"].upper().replace(" ", "")
                         systematic_order_id = f"BZC-{st.session_state.order_sequence_counter:03d}-{tag_body}"
                         
+                        # LOGISTICS SUBMISSION LOGIC (Saves physical location address for admin/riders)
                         st.session_state.mock_db_orders.append({
                             "Order ID": systematic_order_id, "User Tag": session["tag"], "Rider": "None",
                             "Clothes (Kg)": final_clothes*7, "Pressing": final_pressing, "Duvets": final_duvet, 
@@ -283,6 +285,7 @@ else:
             if not unassigned_jobs:
                 st.info("Zero unassigned packages available in logistics queues.")
             for o in unassigned_jobs:
+                # Rider extracts target location address coordinates automatically
                 st.write(f"Order: {o['Order ID']} - Route Target: {o['Location']} (Value: KES {o['Cost']})")
                 if st.button("Claim Route Access Contract", key="claim_"+o["Order ID"]):
                     o["Rider"] = session["tag"]
@@ -302,7 +305,7 @@ else:
             total_rev = df_all["Cost"].sum() if not df_all.empty else 0
             total_jobs = len(df_all)
             
-            # Count users filtering out admin/rider accounts if necessary, or total system fingerprint
+            # Count users filtering out admin/rider accounts from database memory
             total_clients = sum(1 for u in st.session_state.mock_db_users.values() if u["role"] == "Customer")
             total_system_users = len(st.session_state.mock_db_users)
             
